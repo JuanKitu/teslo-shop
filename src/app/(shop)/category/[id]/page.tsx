@@ -1,7 +1,16 @@
 import React from 'react'
-
-export default function CategoryPage() {
+import {notFound} from "next/navigation";
+interface Props {
+    params: {
+        id: string
+    }
+}
+export default function CategoryPage({params}: Props) {
+    const {id} = params;
+    if(id === 'kids'){
+        notFound();
+    }
     return (
-        <div>CategoryPage</div>
+        <div>CategoryPage {id} </div>
     )
 }
