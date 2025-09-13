@@ -1,16 +1,27 @@
 import React from 'react'
-import {notFound} from "next/navigation";
+import {initialData} from "@/seed/seed";
+import {ProductGrid, Title} from "@/components";
+import {labelCategory, Category} from "@/interfaces";
 interface Props {
     params: {
-        id: string
+        id: Category
     }
 }
 export default function CategoryPage({params}: Props) {
     const {id} = params;
-    if(id === 'kids'){
+    const products = initialData.products.filter(product => product.gender === id)
+
+    /*if(id === 'kids'){
         notFound();
-    }
+    }*/
     return (
-        <div>CategoryPage {id} </div>
+        <>
+            <Title
+                title={`Articulos de ${labelCategory[id]}`}
+                subtitle={`Todos los productos`}
+                className="mb-2"
+            />
+            <ProductGrid products={products} />
+        </>
     )
 }
