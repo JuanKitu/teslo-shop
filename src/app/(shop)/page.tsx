@@ -1,13 +1,14 @@
 import {Pagination, ProductGrid, Title} from "@/components";
 import {getPaginatedProductsWithImages} from "@/actions";
 import {redirect} from "next/navigation";
-interface Props{
-    searchParams: {
-        page?: string
-    }
+interface Props {
+    searchParams: Promise<{
+        page: string
+    }>
 }
 export default async function Home({searchParams}: Props) {
-    const page = searchParams.page ? Number(searchParams.page) : 1;
+    const findPage = await searchParams;
+    const page = findPage.page ? Number(findPage.page) : 1;
     const {products, totalPages} = await getPaginatedProductsWithImages({
         page,
         take: 12,

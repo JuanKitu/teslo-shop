@@ -2,7 +2,9 @@
 import React from 'react'
 import {IoChevronBackOutline, IoChevronForwardOutline} from "react-icons/io5";
 import Link from "next/link";
-import {usePathname, useSearchParams} from "next/navigation";
+import {redirect, usePathname, useSearchParams} from "next/navigation";
+import {generatePaginationNumbers} from "@/utils";
+import clsx from "clsx";
 
 interface Props {
     totalPages: number;
@@ -11,16 +13,21 @@ interface Props {
 export function Pagination({totalPages}: Props) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const currentPage = Number(searchParams.get('page')) ?? 1;
+    const pageString = searchParams.get('page') ?? '1';
+    const currentPage = isNaN(+pageString) ? 1 : +pageString;
+    if(currentPage < 1 || isNaN(+pageString)) {
+        redirect(pathname);
+    }
+    const allPages = generatePaginationNumbers(currentPage, totalPages);
     const createPageUrl = (pageNumber: number | string) => {
         const params = new URLSearchParams(searchParams);
-        if( pageNumber === '...'){
+        if (pageNumber === '...') {
             return `${pathname}?${params.toString()}`;
         }
-        if(+pageNumber <= 0){
+        if (+pageNumber <= 0) {
             return `${pathname}`;
         }
-        if(+pageNumber > totalPages){
+        if (+pageNumber > totalPages) {
             return `${pathname}?${params.toString()}`;
         }
         params.set('page', pageNumber.toString());
@@ -37,18 +44,28 @@ export function Pagination({totalPages}: Props) {
                             <IoChevronBackOutline size={30}/>
                         </Link>
                     </li>
-
-                    <li className="page-item"><a
-                        className="page-link relative block py-1.5 px-3 border-0 bg-transparent outline-none transition-all duration-300 rounded text-gray-800 hover:text-gray-800 hover:bg-gray-200 focus:shadow-none"
-                        href="#">1</a></li>
-
-                    <li className="page-item active"><a
-                        className="page-link relative block py-1.5 px-3 border-0 bg-blue-600 outline-none transition-all duration-300 rounded text-white hover:text-white hover:bg-blue-600 shadow-md focus:shadow-md"
-                        href="#">2 <span className="visually-hidden"></span></a></li>
-                    <li className="page-item"><a
-                        className="page-link relative block py-1.5 px-3 border-0 bg-transparent outline-none transition-all duration-300 rounded text-gray-800 hover:text-gray-800 hover:bg-gray-200 focus:shadow-none"
-                        href="#">3</a></li>
-
+                    {
+                        allPages.map((page, index) => (
+                            <li key={page + '-' + index} className="page-item">
+                                <Link
+                                    className={
+                                    clsx(
+                                        'page-link relative block py-1.5 px-3 border-0 outline-none transition-all duration-300 rounded text-gray-800 hover:text-gray-800 focus:shadow-none',
+                                        {
+                                            'bg-blue-600 shadow-md text-white hover:bg-blue-700 hover:text-white': page === currentPage,
+                                        },
+                                        {
+                                            'hover:bg-gray-200 bg-transparent' : page !== currentPage,
+                                        }
+                                     )
+                                    }
+                                    href={createPageUrl(page)}>
+                                    {
+                                        page
+                                    }
+                                </Link>
+                            </li>
+                        ))}
                     <li className="page-item">
                         <Link
                             className="page-link relative block py-1.5 px-3 border-0 bg-transparent outline-none transition-all duration-300 rounded text-gray-800 hover:text-gray-800 hover:bg-gray-200 focus:shadow-none"
