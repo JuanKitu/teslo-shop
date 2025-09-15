@@ -6,15 +6,15 @@ import {getPaginatedProductsWithImages} from "@/actions";
 import {notFound} from "next/navigation";
 export const revalidate = 86400; // un dia
 interface Props {
-    params: {
+    params: Promise<{
         gender: Gender
-    }
+    }>
     searchParams: Promise<{
         page: string
     }>
 }
 export default async function GenderPage({params, searchParams}: Props) {
-    const {gender} = params;
+    const {gender} = await params;
     if(Gender[gender] === undefined){
         notFound();
     }

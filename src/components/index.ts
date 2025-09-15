@@ -11,3 +11,4 @@ export {ProductSlideshow} from './product/slideshow/ProductSlideshow';
 export {ProductMobileSlideshow} from './product/slideshow/ProductMobileSlideshow';
 export {Footer} from './ui/footer/Footer';
 export {Pagination} from './ui/pagination/Pagination';
+export {StockLabel} from './product/stock-label/StockLabel'

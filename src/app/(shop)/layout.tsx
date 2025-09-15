@@ -1,5 +1,12 @@
 import {Footer, Sidebar, TopMenu} from "@/components";
-
+import {Metadata} from "next";
+export const metadata:Metadata = {
+    title:{
+        template: "%s - | Teslo Shop",
+        default: "Home - | Teslo Shop",
+    },
+    description: "Una tienda de productos de productos",
+}
 export default function ShopLayout({
     children
                                    }: {
