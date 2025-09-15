@@ -4,6 +4,7 @@ import {labelCategory} from "@/interfaces";
 import {Gender} from "@prisma/client";
 import {getPaginatedProductsWithImages} from "@/actions";
 import {notFound} from "next/navigation";
+export const revalidate = 86400; // un dia
 interface Props {
     params: {
         gender: Gender

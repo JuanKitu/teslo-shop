@@ -1,6 +1,7 @@
 import {Pagination, ProductGrid, Title} from "@/components";
 import {getPaginatedProductsWithImages} from "@/actions";
 import {redirect} from "next/navigation";
+export const revalidate = 86400; // un dia
 interface Props {
     searchParams: Promise<{
         page: string
