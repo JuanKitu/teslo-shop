@@ -1,9 +1,10 @@
 import React from 'react'
 import {notFound} from "next/navigation";
 import {titleFont} from "@/app/config/fonts";
-import {ProductMobileSlideshow, ProductSlideshow, QuantitySelector, SizeSelector, StockLabel} from "@/components";
+import {ProductMobileSlideshow, ProductSlideshow, StockLabel} from "@/components";
 import {getProductBySlug} from "@/actions";
 import {Metadata} from "next";
+import {AddToCart} from "@/app/(shop)/product/[slug]/ui/AddToCart";
 export const revalidate = 604800;// 7 days
 interface Props {
     params: Promise<{
@@ -59,16 +60,8 @@ export default async function ProductPage({params}: Props) {
                     {product.title}
                 </h1>
                 <p className="text-lg mb-5">${product.price}</p>
-                {/* Selector de tallas */}
-                <SizeSelector availableSizes={product.sizes} selectedSize={product.sizes[1]} />
 
-                {/* Selector de cantidad */}
-                <QuantitySelector quantity={5} />
-
-                {/* Button */}
-                <button className="btn-primary my-5">
-                    Agregar al carrito
-                </button>
+                <AddToCart product={product} />
                 {/* Descripción */}
                 <h3 className="font-bold text-sm">Descripción</h3>
                 <p className="font-light">{product.description}</p>
