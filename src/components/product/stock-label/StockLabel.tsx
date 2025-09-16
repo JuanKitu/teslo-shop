@@ -1,7 +1,7 @@
 'use client';
 import React, {useEffect, useState} from 'react'
 import {titleFont} from "@/app/config/fonts";
-import {getStockBySlug} from "@/actions/product/get-stock-by-slug";
+import {getStockBySlug} from "@/actions";
 
 interface Props {
     slug: string;
