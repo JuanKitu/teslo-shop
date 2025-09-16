@@ -33,7 +33,12 @@ export function TopMenu() {
                 <Link href="/search" className="mx-2">
                     <IoSearchOutline className="w-5 h-5"/>
                 </Link>
-                <Link href="/cart" className="mx-2">
+                <Link href={
+                    ((getTotalItems === 0  && loaded)?
+                    "/empty" :
+                    "/cart"
+                    )
+                } className="mx-2">
                     <div className="relative">
                         {
                             (loaded && getTotalItems > 0) && (
