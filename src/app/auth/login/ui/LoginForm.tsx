@@ -1,12 +1,13 @@
 'use client';
-import React, {useActionState} from 'react'
+import React, {useActionState, useEffect} from 'react'
 import Link from "next/link";
 
 import {authenticate} from "@/actions";
 import {IoAlertCircle} from "react-icons/io5";
 import {LoginButton} from "@/app/auth/login/ui/LoginButton";
 import {useSearchParams} from "next/navigation";
-
+import {useRouter} from "next/navigation";
+import {useSession} from "next-auth/react";
 export function LoginForm() {
     const [errorMessage, formAction, isPending] = useActionState(
         authenticate,
@@ -14,6 +15,14 @@ export function LoginForm() {
     );
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || '/';
+    const router = useRouter();
+    const { update } = useSession();
+    useEffect(()=>{
+        if(errorMessage === 'Success'){
+            update();
+            router.replace(callbackUrl);
+        }
+    }, [callbackUrl, errorMessage, router, update]);
     return (
         <form action={formAction} className="flex flex-col">
 
@@ -29,7 +38,7 @@ export function LoginForm() {
                 className="px-5 py-2 border bg-gray-200 rounded mb-5"
                 name="password"
                 type="password" />
-            <input type="hidden" name="redirectTo" value={callbackUrl} />
+            {/*<input type="hidden" name="redirectTo" value={callbackUrl} />*/}
             <LoginButton isPending={isPending} />
 
 
@@ -46,7 +55,7 @@ export function LoginForm() {
                 Crear una nueva cuenta
             </Link>
             {
-                errorMessage && (
+                (errorMessage && errorMessage !== 'Success') && (
                     <div
                         className="mt-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 flex items-center gap-2 fade-in"
                         aria-live="polite"

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import clsx from "clsx";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import {
     IoCloseOutline,
     IoLogInOutline,
@@ -13,18 +13,29 @@ import {
     IoShirtOutline,
     IoTicketOutline,
 } from "react-icons/io5";
-
-import { logout } from "@/actions";
 import {useUiStore} from "@/store";
+import {useRouter} from "next/navigation";
 
 export const Sidebar = () => {
     const isSideMenuOpen = useUiStore((state) => state.isSideMenuOpen);
     const closeMenu = useUiStore((state) => state.closeSideMenu);
 
-    const { data: session } = useSession();
+    const { data: session, update } = useSession();
+    console.log(session)
     const isAuthenticated = !!session?.user;
     //const isAdmin = session?.user.role === "admin";
     const isAdmin = true;
+    const router = useRouter();
+    const onLogout = async () => {
+        signOut({ redirect: false }).then(
+            () => {
+                update();
+            }
+        );
+        closeMenu();
+        router.refresh();
+    };
+
 
     return (
         <div>
@@ -92,7 +103,7 @@ export const Sidebar = () => {
                 {isAuthenticated && (
                     <button
                         className="flex w-full items-center mt-10 p-2 hover:bg-gray-100 rounded transition-all"
-                        onClick={() => logout()}
+                        onClick={() => onLogout()}
                     >
                         <IoLogOutOutline size={30} />
                         <span className="ml-3 text-xl">Salir</span>
