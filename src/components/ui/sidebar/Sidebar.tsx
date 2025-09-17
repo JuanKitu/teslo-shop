@@ -23,8 +23,7 @@ export const Sidebar = () => {
     const { data: session, update } = useSession();
     console.log(session)
     const isAuthenticated = !!session?.user;
-    //const isAdmin = session?.user.role === "admin";
-    const isAdmin = true;
+    const isAdmin = session?.user.role === "admin";
     const router = useRouter();
     const onLogout = async () => {
         signOut({ redirect: false }).then(
