@@ -1,5 +1,5 @@
 import NextAuth, { NextAuthConfig } from 'next-auth';
-import Credentials from "@auth/core/providers/credentials";
+import Credentials from "next-auth/providers/credentials";
 import { z } from 'zod';
 import prisma from "@/lib/prisma";
 import bcryptjs from "bcryptjs";
@@ -8,6 +8,20 @@ export const authConfig = {
     pages: {
         signIn: '/auth/login',
         newUser: '/auth/new-account',
+    },
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.data = user;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if(token.data){
+                session.user = token.data;
+            }
+            return session;
+        },
     },
     providers: [
         Credentials({
@@ -25,9 +39,14 @@ export const authConfig = {
                 })
                 if (!user) return null;
                 if(!bcryptjs.compareSync(password, user.password)) return null;
-                const {password:_, ...rest} = user;
-                void _;
-                return rest;
+                return {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    image: user.image,
+                    emailVerified: user.emailVerified,
+                };
             },
         }),
     ]
