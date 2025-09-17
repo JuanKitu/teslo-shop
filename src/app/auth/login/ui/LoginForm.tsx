@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import {authenticate} from "@/actions";
 import {IoAlertCircle} from "react-icons/io5";
+import {LoginButton} from "@/app/auth/login/ui/LoginButton";
+
 export function LoginForm() {
     const [errorMessage, formAction, isPending] = useActionState(
         authenticate,
@@ -24,13 +26,7 @@ export function LoginForm() {
                 className="px-5 py-2 border bg-gray-200 rounded mb-5"
                 name="password"
                 type="password" />
-
-            <button
-                type="submit"
-                disabled={isPending}
-                className="btn-primary">
-                Ingresar
-            </button>
+            <LoginButton isPending={isPending} />
 
 
             {/* divisor l ine */ }
@@ -45,18 +41,18 @@ export function LoginForm() {
                 className="btn-secondary text-center">
                 Crear una nueva cuenta
             </Link>
-            <div
-                className="mt-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 flex items-center gap-2"
-                aria-live="polite"
-                aria-atomic="true"
-            >
-                {errorMessage  && (
-                    <>
+            {
+                errorMessage && (
+                    <div
+                        className="mt-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 flex items-center gap-2 fade-in"
+                        aria-live="polite"
+                        aria-atomic="true"
+                    >
                         <IoAlertCircle className="h-5 w-5 flex-shrink-0 text-red-500" />
                         <span>{errorMessage ?? "Ocurrió un error al iniciar sesión"}</span>
-                    </>
+                    </div>
                 )}
-            </div>
+
         </form>
     )
 }
