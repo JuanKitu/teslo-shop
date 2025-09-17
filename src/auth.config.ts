@@ -33,4 +33,4 @@ export const authConfig = {
     ]
 } satisfies NextAuthConfig;
 
-export const {signOut, signIn, auth} = NextAuth(authConfig);
+export const {signOut, signIn, auth, handlers} = NextAuth(authConfig);

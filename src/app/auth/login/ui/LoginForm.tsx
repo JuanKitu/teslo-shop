@@ -5,12 +5,15 @@ import Link from "next/link";
 import {authenticate} from "@/actions";
 import {IoAlertCircle} from "react-icons/io5";
 import {LoginButton} from "@/app/auth/login/ui/LoginButton";
+import {useSearchParams} from "next/navigation";
 
 export function LoginForm() {
     const [errorMessage, formAction, isPending] = useActionState(
         authenticate,
         undefined,
     );
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get('callbackUrl') || '/';
     return (
         <form action={formAction} className="flex flex-col">
 
@@ -26,6 +29,7 @@ export function LoginForm() {
                 className="px-5 py-2 border bg-gray-200 rounded mb-5"
                 name="password"
                 type="password" />
+            <input type="hidden" name="redirectTo" value={callbackUrl} />
             <LoginButton isPending={isPending} />
 
 
