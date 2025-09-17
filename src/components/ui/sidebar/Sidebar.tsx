@@ -13,9 +13,11 @@ import {
 import {SideBarItem} from "@/components";
 import {useUiStore} from "@/store";
 import clsx from "clsx";
+import {logout} from "@/actions";
 const itemsAdminMenu = [
     {
         name: "Perfil",
+        urlPath: "/profile",
         icon: <IoPersonOutline size={30} />
     },
     {
@@ -28,7 +30,10 @@ const itemsAdminMenu = [
     },
     {
         name: "Salir",
-        icon: <IoLogOutOutline size={30} />
+        icon: <IoLogOutOutline size={30} />,
+        callback: ()=>{
+            logout().then()
+        }
     },
 ]
 const itemsUserMenu = [
@@ -88,7 +93,13 @@ export function Sidebar() {
                 {/* Menú */}
                 {
                     itemsAdminMenu.map(item => (
-                        <SideBarItem key={item.name} name={item.name} icon={item.icon} />
+                        <SideBarItem
+                            key={item.name}
+                            name={item.name}
+                            icon={item.icon}
+                            onClick={item.callback}
+                            urlPath={item.urlPath}
+                        />
                     ))
                 }
                 {/* Line separator */}
