@@ -13,3 +13,5 @@ export {Footer} from './ui/footer/Footer';
 export {Pagination} from './ui/pagination/Pagination';
 export {StockLabel} from './product/stock-label/StockLabel';
 export {Provider} from './provider/Provider';
+export {FormInput} from './form/FormInput';
+export {FormSelect} from './form/FormSelect';
