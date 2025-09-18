@@ -2,9 +2,9 @@
 import React, {useState} from 'react'
 import Link from "next/link";
 import {SubmitHandler, useForm} from "react-hook-form";
-import FormInput from "@/app/auth/new-account/ui/FormInput";
 import {registerUser, login} from "@/actions";
 import {IoAlertCircle} from "react-icons/io5";
+import {FormInput} from "@/components";
 type FormInputs = {
     name: string;
     email: string;
@@ -28,6 +28,7 @@ export default function RegisterForm() {
 
             <FormInput
                 label="Nombre completo"
+                className="mb-4"
                 registration={register("name", { required: "El nombre es requerido" })}
                 error={errors.name}
             />
@@ -35,6 +36,7 @@ export default function RegisterForm() {
             <FormInput
                 label="Correo electrónico"
                 type="email"
+                className="mb-4"
                 registration={register("email", {
                     required: "El email es requerido",
                     pattern: {
@@ -47,6 +49,7 @@ export default function RegisterForm() {
 
             <FormInput
                 label="Contraseña"
+                className="mb-4"
                 type="password"
                 registration={register("password", { required: "La contraseña es requerida" })}
                 error={errors.password}
