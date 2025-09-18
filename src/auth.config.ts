@@ -10,6 +10,13 @@ export const authConfig = {
         newUser: '/auth/new-account',
     },
     callbacks: {
+        authorized({ auth, request: { nextUrl } }) {
+            const isLoggedIn = !!auth?.user;
+            if (isLoggedIn) return true;
+            const privatesRoutes = ['/cart', '/empty', '/checkout', '/orders'];
+            const isPrivateRoute = privatesRoutes.some(route => nextUrl.pathname.startsWith(route));
+            return !(isPrivateRoute && !isLoggedIn);
+        },
         async jwt({ token, user }) {
             if (user) {
                 token.data = user;
