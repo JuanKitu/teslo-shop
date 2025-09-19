@@ -1,12 +1,13 @@
 'use client';
-import React from 'react'
+import React, {useEffect} from 'react'
 import {SubmitHandler, useForm} from "react-hook-form";
 import {FormInput, FormSelect} from "@/components";
 import clsx from "clsx";
-import type {Country} from "@/interfaces";
+import type {Address, Country} from "@/interfaces";
 import {useAddressStore} from "@/store";
 import {deleteUserAddress, setUserAddress} from "@/actions";
 import {useSession} from "next-auth/react";
+import {useRouter} from "next/navigation";
 type FormInputs = {
     firstName: string;
     lastName: string;
@@ -21,18 +22,27 @@ type FormInputs = {
 }
 interface Props {
     countries: Country[];
+    userStoreAddress?: Partial<Address>;
 }
-export function AddressForm({countries}: Props) {
+export function AddressForm({countries, userStoreAddress={}}: Props) {
     const {data: session} = useSession({
         required: true,
     })
-    const setAddress = useAddressStore(state => state.setAddress);
-    const address = useAddressStore(state => state.address);
-    const {handleSubmit, register, formState:{isValid}} = useForm<FormInputs>({
+    const router = useRouter();
+
+    const {handleSubmit, register, formState:{isValid}, reset} = useForm<FormInputs>({
         defaultValues:{
-            ...address
+            ...userStoreAddress,
+            rememberAddress:false
         }
     });
+    const setAddress = useAddressStore(state => state.setAddress);
+    const address = useAddressStore(state => state.address);
+    useEffect(() => {
+        if ( address.firstName ) {
+            reset(address)
+        }
+    },[address, reset])
     const onSubmit:SubmitHandler<FormInputs> = async (data) => {
         console.log(data);
         setAddress(data);
@@ -43,18 +53,10 @@ export function AddressForm({countries}: Props) {
         } else {
             await deleteUserAddress(session?.user?.id);
         }
+        router.push('/checkout');
     }
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-2 sm:gap-5 sm:grid-cols-2">
-
-
-            {/*<div className="flex flex-col mb-2">
-                <span>Nombres</span>
-                <input
-                    type="text"
-                    className="p-2 border rounded-md bg-gray-200"
-                />
-            </div>*/}
             <FormInput
                 label="Nombres"
                 autoFocus={true}
@@ -106,8 +108,6 @@ export function AddressForm({countries}: Props) {
                 registration={register("phone", { required: "el Teléfono es requerido" })}
                 /*error={errors.name}*/
             />
-
-
             <div className="flex flex-col mb-2 sm:mt-1">
                 <div className="inline-flex items-center mb-10">
                     <label

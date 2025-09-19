@@ -3,9 +3,14 @@ import {Address} from "@/interfaces";
 import prisma from "@/lib/prisma";
 
 
-export async  function setUserAddress(address: Address, userId: string){
+export async  function setUserAddress(address: Address, userId: string | undefined){
     try {
-
+        if( !userId ){
+            return {
+                ok: false,
+                message: "No se pudo grabar la dirección",
+            }
+        }
         const newAddress = await createOrReplaceAddress( address, userId );
 
         return {

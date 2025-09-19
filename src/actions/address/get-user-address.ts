@@ -1,9 +1,9 @@
 'use server';
 import prisma from '@/lib/prisma';
 
-export async function getUserAddress( userId: string ){
+export async function getUserAddress( userId: string | undefined ){
     try {
-
+        if ( !userId ) return null;
         const address = await prisma.userAddress.findUnique({
             where: { userId }
         });

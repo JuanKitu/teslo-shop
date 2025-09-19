@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthConfig } from 'next-auth';
+import NextAuth, {NextAuthConfig, Session} from 'next-auth';
 import Credentials from "next-auth/providers/credentials";
 import { z } from 'zod';
 import prisma from "@/lib/prisma";
@@ -25,7 +25,7 @@ export const authConfig = {
         },
         async session({ session, token }) {
             if(token.data){
-                session.user = token.data;
+                session.user = token.data as Session['user'];
             }
             return session;
         },

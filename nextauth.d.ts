@@ -1,24 +1,23 @@
-import { DefaultSession } from "next-auth";
-
-interface User {
+export interface IUser {
     id: string;
     name: string;
     email: string;
     emailVerified: Date | null;
-    image?: string;
     role: string;
+    image?: string;
 }
 
 declare module "next-auth" {
     interface Session {
-        user: User & DefaultSession["user"];
+        user: IUser; // ✅ tu User, nada de AdapterUser
     }
 
-    type User = User // 👈 usamos tu interfaz
+    // ✅ esta línea es la que corta con AdapterUser
+    type User = IUser;
 }
 
 declare module "next-auth/jwt" {
     interface JWT {
-        data?: User;
+        data?: IUser;
     }
 }
