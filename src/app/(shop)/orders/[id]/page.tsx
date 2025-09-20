@@ -83,7 +83,16 @@ export default async function orderPage({params}: Props) {
                             <span className="mt-5 text-2xl text-right">{currencyFormat(order!.total)}</span>
                         </div>
                         <div className="mt-5 mb-2 w-full">
-                            <PaypalButton />
+                            {
+                                order.isPaid ? (
+                                    <CardPayState isPaid={order.isPaid} />
+                                ) : (
+                                    <PaypalButton
+                                        amount={order!.total}
+                                        orderId={order!.id}
+                                    />
+                                )
+                            }
                         </div>
 
 

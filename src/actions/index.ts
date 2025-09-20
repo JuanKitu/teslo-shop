@@ -11,3 +11,4 @@ export * from './address/set-user-address';
 export * from './order/get-order-by-id';
 export * from './order/get-orders-by-user';
 export * from './order/place-order';
+export * from './payments/set-transaction-id';
