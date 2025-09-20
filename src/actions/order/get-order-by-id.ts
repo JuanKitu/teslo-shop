@@ -6,7 +6,7 @@ import {GetOrderResult, OrderWithDetails} from "@/interfaces";
 export async function getOrderById(id: string): Promise<GetOrderResult> {
     const session = await auth();
     if (!session?.user) {
-        return { ok: false, message: 'Debe de estar autenticado' };
+        return {order: undefined, ok: false, message: 'Debe de estar autenticado' };
     }
 
     try {
@@ -32,18 +32,18 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
         });
 
         if (!order) {
-            return { ok: false, message: 'Hubo un error en la orden' };
+            return {order: undefined, ok: false, message: 'Hubo un error en la orden' };
         }
 
         // Validación de rol de usuario
         if (session.user.role === 'user' && session.user.id !== order.userId) {
-            return { ok: false, message: 'Hubo un error con el usuario' };
+            return {order, ok: false, message: 'Hubo un error con el usuario' };
         }
 
-        return { ok: true, order };
+        return {message: "", ok: true, order };
     } catch (error: unknown) {
         console.error(error);
         const message = error instanceof Error ? error.message : 'Orden no existe';
-        return { ok: false, message };
+        return {order: undefined, ok: false, message };
     }
 }

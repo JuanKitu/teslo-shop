@@ -18,14 +18,8 @@ export interface OrderWithDetails extends Order {
     OrderItem: OrderItemWithProduct[];
 }
 
-export interface GetOrderSuccess {
-    ok: true;
-    order: OrderWithDetails;
-}
-
-export interface GetOrderError {
-    ok: false;
+export interface GetOrderResult {
+    ok: boolean;
     message: string;
+    order: OrderWithDetails | undefined;
 }
-
-export type GetOrderResult = GetOrderSuccess | GetOrderError;
