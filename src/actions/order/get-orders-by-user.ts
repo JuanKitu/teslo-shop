@@ -8,7 +8,8 @@ export async function getOrdersByUser(){
     if ( !session?.user ) {
         return {
             ok: false,
-            message: 'Debe de estar autenticado'
+            message: 'Debe de estar autenticado',
+            orders: undefined,
         }
     }
     const orders = await prisma.order.findMany({
@@ -27,5 +28,6 @@ export async function getOrdersByUser(){
     return {
         ok: true,
         orders: orders,
+        message: 'Transacciones realizadas'
     }
 }
