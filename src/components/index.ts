@@ -12,6 +12,7 @@ export {ProductMobileSlideshow} from './product/slideshow/ProductMobileSlideshow
 export {Footer} from './ui/footer/Footer';
 export {Pagination} from './ui/pagination/Pagination';
 export {StockLabel} from './product/stock-label/StockLabel';
-export {Provider} from './provider/Provider';
+export {Providers} from '@/components/providers/Providers';
 export {FormInput} from './form/FormInput';
 export {FormSelect} from './form/FormSelect';
+export {PaypalButton} from './paypal/PaypalButton'

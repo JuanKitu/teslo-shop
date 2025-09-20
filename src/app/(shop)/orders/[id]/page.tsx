@@ -1,5 +1,5 @@
 import React from 'react'
-import {Title} from "@/components";
+import {PaypalButton, Title} from "@/components";
 import Image from "next/image";
 import {getOrderById} from "@/actions";
 import {redirect} from "next/navigation";
@@ -83,7 +83,7 @@ export default async function orderPage({params}: Props) {
                             <span className="mt-5 text-2xl text-right">{currencyFormat(order!.total)}</span>
                         </div>
                         <div className="mt-5 mb-2 w-full">
-                            <CardPayState isPaid={order.isPaid} />
+                            <PaypalButton />
                         </div>
 
 
