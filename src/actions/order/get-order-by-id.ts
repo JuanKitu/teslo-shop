@@ -1,17 +1,16 @@
 'use server';
 import { auth } from '@/auth.config';
 import prisma from '@/lib/prisma';
+import {GetOrderResult, OrderWithDetails} from "@/interfaces";
 
-export async function getOrderById( id: string ) {
+export async function getOrderById(id: string): Promise<GetOrderResult> {
     const session = await auth();
-    if ( !session?.user ) {
-        return {
-            ok: false,
-            message: 'Debe de estar autenticado'
-        }
+    if (!session?.user) {
+        return { ok: false, message: 'Debe de estar autenticado' };
     }
+
     try {
-        const order = await prisma.order.findUnique({
+        const order: OrderWithDetails | null = await prisma.order.findUnique({
             where: { id },
             include: {
                 OrderAddress: true,
@@ -20,43 +19,31 @@ export async function getOrderById( id: string ) {
                         price: true,
                         quantity: true,
                         size: true,
-
                         product: {
                             select: {
                                 title: true,
                                 slug: true,
-
-                                ProductImage: {
-                                    select: {
-                                        url: true
-                                    },
-                                    take: 1
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                ProductImage: { select: { url: true }, take: 1 },
+                            },
+                        },
+                    },
+                },
+            },
         });
-        if( !order ) return {
-            ok: false,
-            message: 'hubo un error en la orden'
-        };
-        if ( session.user.role === 'user' ) {
-            if ( session.user.id !== order.userId ) return {
-                ok: false,
-                message: 'hubo un error con el usuario'
-            }
+
+        if (!order) {
+            return { ok: false, message: 'Hubo un error en la orden' };
         }
-        return {
-            ok: true,
-            order: order,
+
+        // Validación de rol de usuario
+        if (session.user.role === 'user' && session.user.id !== order.userId) {
+            return { ok: false, message: 'Hubo un error con el usuario' };
         }
-    } catch (error) {
-        console.log(error);
-        return {
-            ok: false,
-            message: 'Orden no existe'
-        }
+
+        return { ok: true, order };
+    } catch (error: unknown) {
+        console.error(error);
+        const message = error instanceof Error ? error.message : 'Orden no existe';
+        return { ok: false, message };
     }
 }
