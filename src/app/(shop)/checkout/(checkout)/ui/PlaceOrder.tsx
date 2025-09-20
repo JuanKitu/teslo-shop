@@ -4,13 +4,16 @@ import PlaceOrderLoading from "@/app/(shop)/checkout/(checkout)/ui/PlaceOrderLoa
 import {useAddressStore, useCartStore} from "@/store";
 import {useShallow} from "zustand/react/shallow";
 import {currencyFormat} from "@/utils";
-import {IoWarningOutline} from "react-icons/io5";
 import clsx from "clsx";
 import {placeOrder} from "@/actions";
+import {useRouter} from "next/navigation";
+import {ErrorMessage} from "./ErrorMessage";
 
 export function PlaceOrder() {
+    const router = useRouter();
     const [loaded, setLoaded] = useState(false);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+    const [errorMessage, setErrorMessage] = useState('')
     const address = useAddressStore(state => state.address);
     const {
         itemsInCart,
@@ -19,6 +22,7 @@ export function PlaceOrder() {
         total
     } = useCartStore(useShallow(state => state.getSummaryInformation()));
     const cart = useCartStore(state => state.cart);
+    const clearCart = useCartStore(state => state.cleatCart);
     useEffect(()=>{
         setLoaded(true);
     }, []);
@@ -29,8 +33,20 @@ export function PlaceOrder() {
             quantity: product.quantity,
             size: product.size,
         }));
-        await placeOrder(productOrder, address);
-        setIsPlacingOrder(false);
+
+
+        const response = await placeOrder(productOrder, address);
+        if(!response.ok){
+            setIsPlacingOrder(false);
+            setErrorMessage(response?.message);
+            return;
+        }
+        clearCart();
+        if(!response?.order){
+            router.replace(`/`)
+        }
+        router.replace(`/orders/${response.order!.id}`);
+
     }
     if (!loaded) {
         return (
@@ -81,14 +97,15 @@ export function PlaceOrder() {
                         }
                      )
                     }
-                    /*href="/orders/123"*/ >
+                >
                     Colocar orden
                 </button>
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                <IoWarningOutline className="h-5 w-5 shrink-0 text-red-500" />
-                <span>Error al crear el pedido. Por favor intenta nuevamente.</span>
-            </div>
+            {
+                errorMessage && (
+                    <ErrorMessage errorMessage={errorMessage} />
+                )
+            }
         </div>
     )
 }

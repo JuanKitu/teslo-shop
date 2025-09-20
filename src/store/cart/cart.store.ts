@@ -17,11 +17,15 @@ interface Actions {
         total: number;
         itemsInCart: number;
     };
+    cleatCart: () => void;
 }
 
 type CartStore = CartState & Actions;
 const storeAPI: StateCreator<CartStore> = (set, get) => ({
     cart: [],
+    cleatCart: () => {
+        set({cart: []});
+    },
     getSummaryInformation: () => {
         const {cart} = get();
         const subtotal = cart.reduce((total, item) => total + item.quantity * item.price, 0);
