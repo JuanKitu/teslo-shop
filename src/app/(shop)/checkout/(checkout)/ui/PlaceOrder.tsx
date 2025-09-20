@@ -22,6 +22,12 @@ export function PlaceOrder() {
         total
     } = useCartStore(useShallow(state => state.getSummaryInformation()));
     const cart = useCartStore(state => state.cart);
+    if(cart.length === 0){
+        router.replace(`/`);
+    }
+    if(!address){
+        router.replace(`/checkout/address`);
+    }
     const clearCart = useCartStore(state => state.cleatCart);
     useEffect(()=>{
         setLoaded(true);
