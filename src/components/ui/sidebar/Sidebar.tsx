@@ -21,7 +21,6 @@ export const Sidebar = () => {
     const closeMenu = useUiStore((state) => state.closeSideMenu);
 
     const { data: session, update } = useSession();
-    console.log(session)
     const isAuthenticated = !!session?.user;
     const isAdmin = session?.user.role === "admin";
     const router = useRouter();
