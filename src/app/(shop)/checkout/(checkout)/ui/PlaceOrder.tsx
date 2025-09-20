@@ -6,6 +6,7 @@ import {useShallow} from "zustand/react/shallow";
 import {currencyFormat} from "@/utils";
 import {IoWarningOutline} from "react-icons/io5";
 import clsx from "clsx";
+import {placeOrder} from "@/actions";
 
 export function PlaceOrder() {
     const [loaded, setLoaded] = useState(false);
@@ -28,7 +29,7 @@ export function PlaceOrder() {
             quantity: product.quantity,
             size: product.size,
         }));
-        console.log(address, productOrder)
+        await placeOrder(productOrder, address);
         setIsPlacingOrder(false);
     }
     if (!loaded) {
