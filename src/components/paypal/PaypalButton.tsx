@@ -51,9 +51,11 @@ export function PaypalButton({orderId, amount}: Props) {
         await paypalCheckPayment(details.id)
     }
     return (
-        <PayPalButtons
-            createOrder={createOrder}
-            onApprove={onApprove}
-        />
+        <div className="relative z-0">
+            <PayPalButtons
+                createOrder={createOrder}
+                onApprove={onApprove}
+            />
+        </div>
     )
 }
