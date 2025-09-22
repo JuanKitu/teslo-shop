@@ -37,6 +37,7 @@ export default function RegisterForm() {
                 label="Correo electrónico"
                 type="email"
                 className="mb-4"
+                classNameInput="px-5 py-2 rounded"
                 registration={register("email", {
                     required: "El email es requerido",
                     pattern: {
@@ -50,6 +51,7 @@ export default function RegisterForm() {
             <FormInput
                 label="Contraseña"
                 className="mb-4"
+                classNameInput="px-5 py-2 rounded"
                 type="password"
                 registration={register("password", { required: "La contraseña es requerida" })}
                 error={errors.password}

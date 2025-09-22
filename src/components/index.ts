@@ -15,5 +15,6 @@ export {StockLabel} from './product/stock-label/StockLabel';
 export {Providers} from '@/components/providers/Providers';
 export {FormInput} from './form/FormInput';
 export {FormSelect} from './form/FormSelect';
+export {FormTextArea} from './form/FormTextArea';
 export {PaypalButton} from './paypal/PaypalButton';
 export {OrderTemplate} from './orders/OrderTemplate';

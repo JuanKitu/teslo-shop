@@ -6,24 +6,24 @@ import AlertText from "./AlertText";
 
 interface Props {
     label: string;
-    type?: string;
     registration: UseFormRegisterReturn;
     autoFocus?: boolean;
     error?: FieldError;
     className?: string;
     classNameInput?: string;
+    rows?: number;
 }
 
-export function FormInput({ label, type = "text", registration, error, className, autoFocus, classNameInput }: Props) {
+export function FormTextArea({ label, registration, error, className, autoFocus, classNameInput, rows }: Props) {
     return (
         <div className={`flex flex-col ${className}`}>
             {error && <AlertText message={`${label} es requerido`} />}
 
             <label className="mb-1">{label}</label>
-            <input
+            <textarea
                 autoFocus = {autoFocus}
-                type={type}
                 {...registration}
+                rows={rows}
                 className={clsx(
                     `border bg-gray-200 ${classNameInput}`,
                     { "border-red-500": error }

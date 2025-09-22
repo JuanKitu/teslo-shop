@@ -59,42 +59,49 @@ export function AddressForm({countries, userStoreAddress={}}: Props) {
             <FormInput
                 label="Nombres"
                 autoFocus={true}
+                classNameInput="px-5 py-2 rounded"
                 className="mb-2"
                 registration={register("firstName", { required: "El nombre es requerido" })}
                 /*error={errors.name}*/
             />
             <FormInput
                 label="Apellidos"
+                classNameInput="px-5 py-2 rounded"
                 className="mb-2"
                 registration={register("lastName", { required: "El apellido es requerido" })}
                 /*error={errors.name}*/
             />
             <FormInput
                 label="Dirección"
+                classNameInput="px-5 py-2 rounded"
                 className="mb-2"
                 registration={register("address", { required: "La Dirección es requerida" })}
                 /*error={errors.name}*/
             />
             <FormInput
                 label="Dirección 2 (Opcional)"
+                classNameInput="px-5 py-2 rounded"
                 className="mb-2"
                 registration={register("address2")}
                 /*error={errors.name}*/
             />
             <FormInput
                 label="Código postal"
+                classNameInput="px-5 py-2 rounded"
                 className="mb-2"
                 registration={register("postalCode", { required: "El Código postal es requerido" })}
                 /*error={errors.name}*/
             />
             <FormInput
                 label="Ciudad"
+                classNameInput="px-5 py-2 rounded"
                 className="mb-1"
                 registration={register("city", { required: "La Ciudad es requerida" })}
                 /*error={errors.name}*/
             />
             <FormSelect<Country>
                 label="País"
+                classNameSelect="px-5 py-2  rounded appearance-none leading-tight"
                 registration={register("country", { required: "El País es requerido" })}
                 options={countries}
                 getOptionValue={(c) => c.id}
@@ -103,6 +110,7 @@ export function AddressForm({countries, userStoreAddress={}}: Props) {
 
             <FormInput
                 label="Teléfono"
+                classNameInput="px-5 py-2 rounded"
                 className="mb-2"
                 registration={register("phone", { required: "el Teléfono es requerido" })}
                 /*error={errors.name}*/

@@ -6,3 +6,4 @@ export * from './paypal.interface';
 export * from './orders/orders-list.interface';
 export * from './user.interface';
 export * from './category.interface';
+export * from './gender.interface';
