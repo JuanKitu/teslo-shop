@@ -19,8 +19,8 @@ export function LoginForm() {
     const { update } = useSession();
     useEffect(()=>{
         if(errorMessage === 'Success'){
-            update();
             router.replace(callbackUrl);
+            router.refresh();
         }
     }, [callbackUrl, errorMessage, router, update]);
     return (
