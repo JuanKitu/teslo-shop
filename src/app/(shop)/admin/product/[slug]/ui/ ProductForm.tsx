@@ -1,9 +1,12 @@
 "use client";
 
-import type {Category, Gender, Product} from "@/interfaces";
+import type {Category, Gender, Product, ProductImage} from "@/interfaces";
+import Image from "next/image";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {FormInput, FormSelect, FormTextArea} from "@/components";
 import React from "react";
+import clsx from "clsx";
+import {createUpdateProduct} from "@/actions";
 interface FormInputs {
     title: string;
     slug: string;
@@ -14,10 +17,6 @@ interface FormInputs {
     tags: string;
     gender: 'men' | 'women' | 'kid' | 'unisex';
     categoryId: string;
-}
-interface Props {
-    product: Product;
-    categories: Category[];
 }
 const genders: Gender[] = [
     {
@@ -37,7 +36,12 @@ const genders: Gender[] = [
         name: "Unisex",
     },
 ];
-
+interface Props {
+    product:Partial<Product> & {
+        ProductImage?: ProductImage[];
+    };
+    categories: Category[];
+}
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export const ProductForm = ({ product, categories }: Props) => {
@@ -45,16 +49,44 @@ export const ProductForm = ({ product, categories }: Props) => {
     const {
         handleSubmit,
         register,
+        getValues,
+        setValue,
+        watch,
         formState: { isValid },
     } = useForm<FormInputs>({
         defaultValues:{
             ...product,
-            tags:product.tags.join(', '),
+            tags: product.tags?.join(', '),
             sizes: product.sizes ?? []
         }
         });
+    watch('sizes');
     const onSubmit:SubmitHandler<FormInputs> = async (data)=>{
-        console.log(data)
+        const formData = new FormData();
+        const {...productToSave} = data;
+        if(product.id){
+            formData.append('id', product.id);
+        }
+        formData.append('title', productToSave.title);
+        formData.append('slug', productToSave.slug);
+        formData.append('description', productToSave.description);
+        formData.append('price', productToSave.price.toString());
+        formData.append('inStock', productToSave.inStock.toString());
+        formData.append('sizes', productToSave.sizes.join(','));
+        formData.append('tags', productToSave.tags);
+        formData.append('gender', productToSave.gender);
+        formData.append('categoryId', productToSave.categoryId);
+        const {ok} = await createUpdateProduct(formData);
+        console.log('ok', ok);
+    }
+    const onSizeChange = (size: string) => {
+        const sizes = new Set(getValues('sizes'));
+        if (sizes.has(size)) {
+            sizes.delete(size);
+        } else {
+            sizes.add(size);
+        }
+        return setValue('sizes', Array.from(sizes))
     }
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="grid px-5 mb-16 grid-cols-1 sm:px-0 sm:grid-cols-2 gap-3">
@@ -121,6 +153,14 @@ export const ProductForm = ({ product, categories }: Props) => {
             </div>
             {/* Selector de tallas y fotos */}
             <div className="w-full">
+                <FormInput
+                    label="Inventario"
+                    classNameInput="p-2 rounded-md"
+                    className="mb-2"
+                    type="number"
+                    registration={register("inStock", { required: "El inventario es requerido", min: 0 })}
+                    /*error={errors.name}*/
+                />
                 {/* As checkboxes */}
                 <div className="flex flex-col">
 
@@ -130,7 +170,17 @@ export const ProductForm = ({ product, categories }: Props) => {
                         {
                             sizes.map( size => (
                                 // bg-blue-500 text-white <--- si está seleccionado
-                                <div key={ size } className="flex  items-center justify-center w-10 h-10 mr-2 border rounded-md">
+                                <div key={ size }
+                                     onClick={()=>{onSizeChange(size)}}
+                                     className={
+                                    clsx(
+                                        "p-2 border cursor-pointer rounded-md mr-2 mb-2 w-14 transition-all text-center",
+                                        {
+                                            'bg-blue-500 text-white': getValues('sizes').includes(size)
+                                        }
+                                    )
+                                     }
+                                >
                                     <span>{ size }</span>
                                 </div>
                             ))
@@ -150,7 +200,27 @@ export const ProductForm = ({ product, categories }: Props) => {
                         />
 
                     </div>
-
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {
+                            product.ProductImage?.map( image => (
+                                <div key={ image.id } className="relative">
+                                    <Image
+                                        src={`/products/${image.url}`}
+                                        alt={product.title ?? ''}
+                                        width={300}
+                                        height={300}
+                                        className="rounded-t-xl shadow-md"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => console.log('Eliminar imagen', image.id, image.url)}
+                                        className="btn-danger rounded-b-xl w-full">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            ))
+                        }
+                    </div>
                 </div>
             </div>
         </form>

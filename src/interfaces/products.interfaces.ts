@@ -13,6 +13,11 @@ export interface Product {
     //type: Type;
     gender: Category;
 }
+export interface ProductImage {
+    id: number;
+    url: string;
+    productId: string;
+}
 type Category = 'men'|'women'|'kid'|'unisex';
 export const labelCategory:Record<Category, string> = {
     men: 'Hombre',

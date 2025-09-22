@@ -1,8 +1,7 @@
-import {Pagination, Title} from '@/components';
+import {Pagination, ProductImage, Title} from '@/components';
 import {getPaginatedProductsWithImages} from "@/actions";
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {currencyFormat} from "@/utils";
 export const revalidate = 0;
 interface Props {
@@ -21,7 +20,7 @@ export default async function ProductsAdminPage({searchParams}: Props) {
         <>
             <Title title="Mantenimiento de productos"/>
             <div className="flex justify-end mb-5">
-                <Link href="/admin/products/new" className="btn-primary">
+                <Link href="/admin/product/new" className="btn-primary">
                     Nuevo Producto
                 </Link>
 
@@ -56,8 +55,8 @@ export default async function ProductsAdminPage({searchParams}: Props) {
                             <tr key={product.id} className="bg-white border-b border-gray-300 transition duration-300 ease-in-out hover:bg-gray-100">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <Link href={`/product/${product.slug}`}>
-                                        <Image
-                                            src={`/products/${product.ProductImage[0].url}`}
+                                        <ProductImage
+                                            src={product.ProductImage[0]?.url}
                                             alt={product.title}
                                             width={80}
                                             height={80}

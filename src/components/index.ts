@@ -18,3 +18,4 @@ export {FormSelect} from './form/FormSelect';
 export {FormTextArea} from './form/FormTextArea';
 export {PaypalButton} from './paypal/PaypalButton';
 export {OrderTemplate} from './orders/OrderTemplate';
+export {ProductImage} from './product/product-image/ProductImage';
