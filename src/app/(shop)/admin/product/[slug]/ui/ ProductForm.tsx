@@ -1,12 +1,11 @@
 "use client";
 
-import type {Category, Gender, Product, ProductImage} from "@/interfaces";
-import Image from "next/image";
+import type {Category, Gender, Product, ProductImage as ProductWithImage} from "@/interfaces";
 import {SubmitHandler, useForm} from "react-hook-form";
-import {FormInput, FormSelect, FormTextArea} from "@/components";
+import {FormInput, FormSelect, FormTextArea, ProductImage} from "@/components";
 import React, {useState} from "react";
 import clsx from "clsx";
-import {createUpdateProduct} from "@/actions";
+import {createUpdateProduct, deleteProductImage} from "@/actions";
 import {useRouter} from "next/navigation";
 import {IoAlertCircle} from "react-icons/io5";
 interface FormInputs {
@@ -19,6 +18,7 @@ interface FormInputs {
     tags: string;
     gender: 'men' | 'women' | 'kid' | 'unisex';
     categoryId: string;
+    images?:FileList;
 }
 const genders: Gender[] = [
     {
@@ -40,7 +40,7 @@ const genders: Gender[] = [
 ];
 interface Props {
     product:Partial<Product> & {
-        ProductImage?: ProductImage[];
+        ProductImage?: ProductWithImage[];
     };
     categories: Category[];
 }
@@ -60,14 +60,15 @@ export const ProductForm = ({ product, categories }: Props) => {
         defaultValues:{
             ...product,
             tags: product.tags?.join(', '),
-            sizes: product.sizes ?? []
+            sizes: product.sizes ?? [],
+            images: undefined
         }
         });
     watch('sizes');
     const onSubmit:SubmitHandler<FormInputs> = async (data)=>{
         setErrorMessage(null);
         const formData = new FormData();
-        const {...productToSave} = data;
+        const {images, ...productToSave} = data;
         if(product.id){
             formData.append('id', product.id);
         }
@@ -80,6 +81,11 @@ export const ProductForm = ({ product, categories }: Props) => {
         formData.append('tags', productToSave.tags);
         formData.append('gender', productToSave.gender);
         formData.append('categoryId', productToSave.categoryId);
+        if(images){
+            for(const image of images){
+                formData.append('images', image);
+            }
+        }
         const {ok, product: updateProduct} = await createUpdateProduct(formData);
         if(!ok){
             setErrorMessage("No se pudo guardar el producto. Intenta nuevamente.");
@@ -223,18 +229,19 @@ export const ProductForm = ({ product, categories }: Props) => {
                         <span>Fotos</span>
                         <input
                             type="file"
+                            {...register('images')}
                             multiple
                             className="p-2 border rounded-md bg-gray-200"
                             accept="image/png, image/jpeg"
                         />
 
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {
                             product.ProductImage?.map( image => (
                                 <div key={ image.id } className="relative">
-                                    <Image
-                                        src={`/products/${image.url}`}
+                                    <ProductImage
+                                        src={image.url}
                                         alt={product.title ?? ''}
                                         width={300}
                                         height={300}
@@ -242,7 +249,7 @@ export const ProductForm = ({ product, categories }: Props) => {
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => console.log('Eliminar imagen', image.id, image.url)}
+                                        onClick={() => deleteProductImage(image.id, image.url)}
                                         className="btn-danger rounded-b-xl w-full">
                                         Eliminar
                                     </button>
