@@ -6,8 +6,6 @@ import {authenticate} from "@/actions";
 import {IoAlertCircle} from "react-icons/io5";
 import {LoginButton} from "@/app/auth/login/ui/LoginButton";
 import {useSearchParams} from "next/navigation";
-import {useRouter} from "next/navigation";
-import {useSession} from "next-auth/react";
 export function LoginForm() {
     const [errorMessage, formAction, isPending] = useActionState(
         authenticate,
@@ -15,16 +13,11 @@ export function LoginForm() {
     );
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || '/';
-    const router = useRouter();
-    const { update } = useSession();
-    useEffect(() => {
-        if (errorMessage === 'Success') {
-            (async () => {
-                await update();
-                router.replace(callbackUrl);
-            })();
+    useEffect(()=>{
+        if(errorMessage === 'Success'){
+            window.location.replace(callbackUrl);
         }
-    }, [callbackUrl, errorMessage, router, update]);
+    }, [callbackUrl, errorMessage]);
     return (
         <form action={formAction} className="flex flex-col">
 
