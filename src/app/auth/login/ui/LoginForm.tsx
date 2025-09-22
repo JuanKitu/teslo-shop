@@ -17,10 +17,12 @@ export function LoginForm() {
     const callbackUrl = searchParams.get('callbackUrl') || '/';
     const router = useRouter();
     const { update } = useSession();
-    useEffect(()=>{
-        if(errorMessage === 'Success'){
-            router.replace(callbackUrl);
-            router.refresh();
+    useEffect(() => {
+        if (errorMessage === 'Success') {
+            (async () => {
+                await update();
+                router.replace(callbackUrl);
+            })();
         }
     }, [callbackUrl, errorMessage, router, update]);
     return (
