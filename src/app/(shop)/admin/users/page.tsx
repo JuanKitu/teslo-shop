@@ -3,7 +3,7 @@ import {getPaginatedUsers} from "@/actions";
 import {redirect} from "next/navigation";
 import {UsersTable} from "./ui/UsersTable";
 export const revalidate = 0;
-export default async function OrdersPage() {
+export default async function UsersAdminPage() {
     const {ok, users = []} = await getPaginatedUsers();
     if(!ok){
         redirect('/auth/login');

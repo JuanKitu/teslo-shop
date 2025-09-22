@@ -13,7 +13,7 @@ export interface Product {
     //type: Type;
     gender: Category;
 }
-export type Category = 'men'|'women'|'kid'|'unisex';
+type Category = 'men'|'women'|'kid'|'unisex';
 export const labelCategory:Record<Category, string> = {
     men: 'Hombre',
     women: 'Mujer',
