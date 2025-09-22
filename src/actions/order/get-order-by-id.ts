@@ -36,7 +36,6 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
         }
 
         // Validación de rol de usuario
-        console.log('***********************', order?.userId)
         if (session.user.role === 'user' && session.user.id !== order?.userId) {
             return {order, ok: false, message: 'Hubo un error con el usuario' };
         }
