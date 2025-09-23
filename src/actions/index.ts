@@ -32,4 +32,7 @@ export * from './user/get-paginater-users';
 export * from './user/change-user-role';
 
 /* Category */
-export * from './category/get-categories'
+export * from './category/get-categories';
+
+/* Cart */
+export * from './cart/add-to-cart';

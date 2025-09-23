@@ -5,14 +5,16 @@ import {ProductMobileSlideshow, ProductSlideshow, StockLabel} from "@/components
 import {getProductBySlug} from "@/actions";
 import {Metadata} from "next";
 import {AddToCart} from "@/app/(shop)/product/[slug]/ui/AddToCart";
+
 export const revalidate = 604800;// 7 days
 interface Props {
     params: Promise<{
         slug: string
     }>
 }
+
 export async function generateMetadata(
-    { params }: Props): Promise<Metadata> {
+    {params}: Props): Promise<Metadata> {
     const slug = (await params).slug
 
     // fetch post information
@@ -28,10 +30,11 @@ export async function generateMetadata(
         }
     }
 }
+
 export default async function ProductPage({params}: Props) {
     const {slug} = await params;
     const product = await getProductBySlug(slug);
-    if(!product){
+    if (!product) {
         notFound();
     }
     return (
@@ -55,13 +58,13 @@ export default async function ProductPage({params}: Props) {
 
             {/* Detalles */}
             <div className="col-span-1 px-5">
-                <StockLabel slug={slug} />
+                <StockLabel slug={slug}/>
                 <h1 className={`${titleFont.className} antialiased text-xl font-bold`}>
                     {product.title}
                 </h1>
                 <p className="text-lg mb-5">${product.price}</p>
 
-                <AddToCart product={product} />
+                <AddToCart product={product}/>
                 {/* Descripción */}
                 <h3 className="font-bold text-sm">Descripción</h3>
                 <p className="font-light">{product.description}</p>

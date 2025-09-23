@@ -3,11 +3,13 @@ import {IoAddCircleOutline, IoRemoveCircleOutline} from "react-icons/io5";
 interface Props {
     quantity: number;
     onQuantityChanged: (value: number) => void;
+    totalStock: number;
 }
-export function QuantitySelector({quantity, onQuantityChanged}: Props) {
+export function QuantitySelector({quantity, onQuantityChanged, totalStock}: Props) {
     const oQuantityChange = (value: number) => {
         const newValue = quantity + value;
         if(newValue < 1 ) return;
+        if(newValue > totalStock) return;
         onQuantityChanged(newValue);
     }
     return (
