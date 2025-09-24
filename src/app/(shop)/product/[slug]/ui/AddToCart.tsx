@@ -6,8 +6,9 @@ import {useCartStore} from "@/store";
 import {addToCartWithStockValidation} from "@/actions";
 interface Props {
     product:Product;
+    onStockError?: () => void;
 }
-export function AddToCart({product}: Props) {
+export function AddToCart({product, onStockError}: Props) {
     const [size, setSize] = useState<Size | undefined>();
     const [quantity, setQuantity] = useState<number>(1);
     const [posted, setPosted] = useState(false);
@@ -28,7 +29,10 @@ export function AddToCart({product}: Props) {
             // Validar stock en el servidor
             const result = await addToCartWithStockValidation(product.slug, quantity);
             if(!result.ok){
-                return  setErrorMessage(result.message);
+                setErrorMessage(result.message);
+                // Actualizar el stock mostrado en pantalla
+                onStockError?.();
+                return;
             }
             // Si hay stock, agregar al carrito
             addProductToCart({

@@ -1,5 +1,5 @@
 'use client';
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState, useImperativeHandle, forwardRef, useCallback} from 'react'
 import {titleFont} from "@/app/config/fonts";
 import {getStockBySlug} from "@/actions";
 
@@ -7,17 +7,28 @@ interface Props {
     slug: string;
 }
 
-export function StockLabel({slug}: Props) {
+export interface StockLabelRef {
+    refreshStock: () => Promise<void>;
+}
+
+export const StockLabel = forwardRef<StockLabelRef, Props>(({slug}, ref) => {
     const [stock, setStock] = useState(0);
     const [isLoading, setIsLoading] = useState(true)
-    useEffect(() => {
-        getStock().then();
-    })
-    const getStock = async () => {
+    
+    const getStock = useCallback(async () => {
+        setIsLoading(true);
         const inStock = await getStockBySlug(slug);
         setStock(inStock);
         setIsLoading(false);
-    }
+    }, [slug])
+
+    useImperativeHandle(ref, () => ({
+        refreshStock: getStock
+    }));
+
+    useEffect(() => {
+        getStock().then();
+    }, [getStock, slug])
 
     return (
         <>
@@ -35,6 +46,7 @@ export function StockLabel({slug}: Props) {
                     )
             }
         </>
-
     )
-}
+});
+
+StockLabel.displayName = 'StockLabel';

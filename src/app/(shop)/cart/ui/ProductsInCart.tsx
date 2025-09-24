@@ -41,6 +41,7 @@ export function ProductsInCart() {
                             <p>Talle: {product.size}</p>
                             <p>${product.price}</p>
                             <QuantitySelector
+                                totalStock={product.quantity}
                                 onQuantityChanged={(value) => updateProductQuantity(product, value)}
                                 quantity={product.quantity}/>
                             <button

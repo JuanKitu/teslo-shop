@@ -1,10 +1,9 @@
 import React from 'react'
 import {notFound} from "next/navigation";
-import {titleFont} from "@/app/config/fonts";
-import {ProductMobileSlideshow, ProductSlideshow, StockLabel} from "@/components";
+import {ProductMobileSlideshow, ProductSlideshow} from "@/components";
 import {getProductBySlug} from "@/actions";
 import {Metadata} from "next";
-import {AddToCart} from "@/app/(shop)/product/[slug]/ui/AddToCart";
+import {ProductDetails} from "@/app/(shop)/product/[slug]/ui/ProductDetails";
 
 export const revalidate = 604800;// 7 days
 interface Props {
@@ -57,19 +56,7 @@ export default async function ProductPage({params}: Props) {
             </div>
 
             {/* Detalles */}
-            <div className="col-span-1 px-5">
-                <StockLabel slug={slug}/>
-                <h1 className={`${titleFont.className} antialiased text-xl font-bold`}>
-                    {product.title}
-                </h1>
-                <p className="text-lg mb-5">${product.price}</p>
-
-                <AddToCart product={product}/>
-                {/* Descripción */}
-                <h3 className="font-bold text-sm">Descripción</h3>
-                <p className="font-light">{product.description}</p>
-
-            </div>
+            <ProductDetails product={product} slug={slug} />
 
         </div>
     )
