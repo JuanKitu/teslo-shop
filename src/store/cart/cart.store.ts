@@ -10,6 +10,7 @@ interface Actions {
     addProductToCart: (product: CartProduct) => void;
     getTotalItems: () => number;
     updateProductQuantity: (product: CartProduct, quantity: number) => void;
+    updateProductQuantityBySlug: (slug: string, newQuantity: number) => void; // ✅ NUEVA
     removeProductFromCart: (product: CartProduct) => void;
     getSummaryInformation: () => {
         subtotal: number;
@@ -17,13 +18,13 @@ interface Actions {
         total: number;
         itemsInCart: number;
     };
-    cleatCart: () => void;
+    clearCart: () => void;
 }
 
 type CartStore = CartState & Actions;
 const storeAPI: StateCreator<CartStore> = (set, get) => ({
     cart: [],
-    cleatCart: () => {
+    clearCart: () => {
         set({cart: []});
     },
     getSummaryInformation: () => {
@@ -56,6 +57,14 @@ const storeAPI: StateCreator<CartStore> = (set, get) => ({
         });
         set({cart: updatedCart});
     },
+    updateProductQuantityBySlug: (slug, newQuantity) => {
+        const { cart } = get();
+        const updatedCart = cart.map((item) =>
+            item.slug === slug ? { ...item, quantity: newQuantity } : item
+        );
+        set({ cart: updatedCart });
+    },
+
     getTotalItems: () => {
         const {cart} = get();
         return cart.reduce((total, item) => total + item.quantity, 0);

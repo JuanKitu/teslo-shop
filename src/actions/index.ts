@@ -36,3 +36,4 @@ export * from './category/get-categories';
 
 /* Cart */
 export * from './cart/add-to-cart';
+export * from './cart/validateCartStock'
