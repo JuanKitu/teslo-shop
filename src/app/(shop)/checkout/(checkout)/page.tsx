@@ -1,7 +1,7 @@
 import React from 'react'
 import {Title} from "@/components";
 import Link from "next/link";
-import {ProductsInCart} from "@/app/(shop)/checkout/(checkout)/ui/ProductsInCart";
+import {ProductsInCheckout} from "@/app/(shop)/checkout/(checkout)/ui/ProductsInCheckout";
 import {PlaceOrder} from "@/app/(shop)/checkout/(checkout)/ui/PlaceOrder";
 
     export default function CheckOutPage() {
@@ -17,7 +17,7 @@ import {PlaceOrder} from "@/app/(shop)/checkout/(checkout)/ui/PlaceOrder";
                             Volver al carrito
                         </Link>
                         {/* Items */}
-                        <ProductsInCart />
+                        <ProductsInCheckout />
                     </div>
 
 

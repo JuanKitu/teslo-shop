@@ -1,80 +1,19 @@
 'use client';
-import React, {useEffect, useState, useRef} from 'react';
-import {toast} from 'sonner';
+import React, { useState, useEffect } from "react";
+import { useCartStockValidation } from "@/hooks";
 import {useCartStore} from "@/store";
-import {ProductImage, QuantitySelector} from "@/components";
+import { ProductImage, QuantitySelector, CartWarning } from "@/components";
 import {ProductsInCartLoading} from "@/app/(shop)/cart/ui/ProductsInCartLoading";
 import Link from "next/link";
-import {validateCartStock} from "@/actions";
-import {CartWarning} from "@/app/(shop)/cart/ui/CartWarning";
-
-interface StockWarning {
-    slug: string;
-    message: string;
-}
-
-interface AdjustedItem {
-    slug: string;
-    newQuantity: number;
-    title: string;
-}
-
-interface ValidateCartStockResult {
-    ok: boolean;
-    adjustedItems?: AdjustedItem[];
-}
 
 export function ProductsInCart() {
     const [loaded, setLoaded] = useState(false);
-    const [warnings, setWarnings] = useState<StockWarning[]>([]);
-    const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
+    const { warnings, setWarnings } = useCartStockValidation({delayWindow: 1500});
+    const cart = useCartStore(state => state.cart);
     const updateProductQuantity = useCartStore(state => state.updateProductQuantity);
     const removeProductFromCart = useCartStore(state => state.removeProductFromCart);
-    const updateProductQuantityBySlug = useCartStore(state => state.updateProductQuantityBySlug);
-    const cart = useCartStore(state => state.cart);
 
     useEffect(() => setLoaded(true), []);
-
-    useEffect(() => {
-        // limpiar timer anterior
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-
-        debounceRef.current = setTimeout(async () => {
-            const result: ValidateCartStockResult = await validateCartStock(
-                cart.map(item => ({slug: item.slug, quantity: item.quantity}))
-            );
-
-            const adjusted = result.adjustedItems ?? [];
-            if (!result.ok && adjusted.length > 0) {
-                const newWarnings: StockWarning[] = adjusted.map(item => {
-                    updateProductQuantityBySlug(item.slug, item.newQuantity); // actualiza store
-                    const message = `Solo quedan ${item.newQuantity} unidades`;
-                    toast.warning(message);
-                    return {slug: item.slug, message};
-                });
-
-                setWarnings(prev => {
-                    const merged = [...prev];
-                    newWarnings.forEach(w => {
-                        if (!merged.some(x => x.slug === w.slug)) merged.push(w);
-                    });
-                    return merged;
-                });
-            }
-        }, 1500);
-
-        return () => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-        };
-    }, [cart, updateProductQuantityBySlug]); // ✅ ESLint OK
-
-    // limpiar warnings si el producto fue eliminado o corregido
-    useEffect(() => {
-        setWarnings(prev =>
-            prev.filter(w => cart.some(item => item.slug === w.slug && item.quantity > 0))
-        );
-    }, [cart]);
 
     if (!loaded) return <ProductsInCartLoading/>;
 

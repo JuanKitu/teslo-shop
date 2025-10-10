@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "npm run prisma:deploy && next build --turbopack",
+    "build:dev": "next build --turbopack",
     "start": "next start",
     "seed": "ts-node src/seed/seed-database.ts",
     "prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
@@ -22,6 +23,7 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "react-icons": "^5.5.0",
+    "sonner": "^2.0.7",
     "swiper": "^12.0.1",
     "ts-node": "^10.9.2",
     "zod": "^4.1.8",
