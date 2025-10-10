@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useCartStore } from "@/store";
+import {useCartStore, useCheckoutStore} from "@/store";
 import { currencyFormat } from "@/utils";
 import { CartWarning } from "@/components/cart/CartWarning";
 import { ProductsInCartLoading } from "@/app/(shop)/cart/ui/ProductsInCartLoading";
@@ -10,8 +10,8 @@ import { useCartStockValidation } from "@/hooks";
 export function ProductsInCheckout() {
     const [loaded, setLoaded] = useState(false);
     const cart = useCartStore(state => state.cart);
-    const { warnings, setWarnings } = useCartStockValidation({delayWindow: 1500});
-
+    const refresh = useCheckoutStore(state => state.refresh);
+    const { warnings, setWarnings } = useCartStockValidation({delayWindow: 1500, refresh});
     useEffect(() => setLoaded(true), []);
 
     if (!loaded) return <ProductsInCartLoading />;

@@ -9,9 +9,10 @@ export interface StockWarning {
 }
 interface Props {
     delayWindow: number;
+    refresh?: number;
 }
 
-export function useCartStockValidation({ delayWindow }: Props) {
+export function useCartStockValidation({ delayWindow, refresh }: Props) {
     const cart = useCartStore(state => state.cart);
     const updateProductQuantityBySlug = useCartStore(state => state.updateProductQuantityBySlug);
     const [warnings, setWarnings] = useState<StockWarning[]>([]);
@@ -47,7 +48,7 @@ export function useCartStockValidation({ delayWindow }: Props) {
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };
-    }, [cart, updateProductQuantityBySlug, delayWindow]);
+    }, [cart, updateProductQuantityBySlug, delayWindow, refresh]);
 
     // limpiar warnings si el producto fue eliminado
     useEffect(() => {

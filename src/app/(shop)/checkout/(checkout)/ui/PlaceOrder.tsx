@@ -1,7 +1,7 @@
 'use client';
 import React, {useEffect, useState} from 'react'
 import PlaceOrderLoading from "@/app/(shop)/checkout/(checkout)/ui/PlaceOrderLoading";
-import {useAddressStore, useCartStore} from "@/store";
+import {useAddressStore, useCartStore, useCheckoutStore} from "@/store";
 import {useShallow} from "zustand/react/shallow";
 import {currencyFormat} from "@/utils";
 import clsx from "clsx";
@@ -12,8 +12,8 @@ import {ErrorMessage} from "./ErrorMessage";
 export function PlaceOrder() {
     const router = useRouter();
     const [loaded, setLoaded] = useState(false);
-    const [isPlacingOrder, setIsPlacingOrder] = useState(false)
-    const [errorMessage, setErrorMessage] = useState('')
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const address = useAddressStore(state => state.address);
     const {
         itemsInCart,
@@ -23,6 +23,7 @@ export function PlaceOrder() {
     } = useCartStore(useShallow(state => state.getSummaryInformation()));
     const cart = useCartStore(state => state.cart);
     const clearCart = useCartStore(state => state.clearCart);
+    const setRefresh = useCheckoutStore(state => state.setRefresh);
     useEffect(()=>{
         setLoaded(true);
     }, []);
@@ -39,6 +40,7 @@ export function PlaceOrder() {
         if(!response.ok){
             setIsPlacingOrder(false);
             setErrorMessage(response?.message);
+            setRefresh();
             return;
         }
         clearCart();

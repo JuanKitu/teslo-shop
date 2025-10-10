@@ -77,7 +77,7 @@ export async function placeOrder(
 
             updatedProducts.forEach((p) => {
                 if (p.inStock < 0) {
-                    throw new Error(`${p.title} no tiene inventario suficiente`);
+                    throw new Error(`No hay suficiente stock del producto`);
                 }
             });
 
