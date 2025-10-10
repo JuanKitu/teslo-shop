@@ -22,7 +22,7 @@ export function PlaceOrder() {
         total
     } = useCartStore(useShallow(state => state.getSummaryInformation()));
     const cart = useCartStore(state => state.cart);
-    const clearCart = useCartStore(state => state.cleatCart);
+    const clearCart = useCartStore(state => state.clearCart);
     useEffect(()=>{
         setLoaded(true);
     }, []);

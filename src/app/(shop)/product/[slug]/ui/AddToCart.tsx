@@ -41,6 +41,7 @@ export function AddToCart({product, onStockError}: Props) {
                 image: product.images[0],
                 title: product.title,
                 price: product.price,
+                inStock: product.inStock,
                 size,
                 quantity,
             });
