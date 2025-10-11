@@ -9,7 +9,7 @@ export async function deleteUserAddress( userId: string | undefined ) {
                 message: "No se pudo grabar la dirección",
             }
         }
-        await prisma.userAddress.delete({
+        await prisma.userAddress.deleteMany({
             where: { userId }
         });
         return { ok: true };
