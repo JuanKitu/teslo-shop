@@ -15,9 +15,21 @@ export function ProductsInCheckout() {
     useEffect(() => setLoaded(true), []);
 
     if (!loaded) return <ProductsInCartLoading />;
+    const errors = warnings.filter((w) => w.type === "error");
+    console.log("cartel de error", errors);
 
     return (
         <>
+            {errors.map((error) => (
+                <CartWarning
+                    key={error.slug}
+                    message={error.message}
+                    className="mb-2"
+                    onClose={() =>
+                        setWarnings((prev) => prev.filter((w) => w.slug !== error.slug))
+                    }
+                />
+            ))}
             {cart.map(product => {
                 const warning = warnings.find(w => w.slug === product.slug);
                 return (

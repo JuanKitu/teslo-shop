@@ -5,11 +5,15 @@ import { IoAlertCircle, IoClose } from "react-icons/io5";
 interface Props {
     message: string;
     onClose: () => void;
+    className?: string;
 }
 
-export function CartWarning({ message, onClose }: Props) {
+export function CartWarning({ message, onClose, className }: Props) {
+
     return (
-        <div className="flex items-center justify-between gap-2 mt-2 bg-amber-50 border border-amber-200 text-amber-900 rounded-md px-4 py-2 shadow-sm fade-in">
+        <div className={
+            `flex items-center justify-between gap-2 mt-2 ${className} bg-amber-50 border border-amber-200 text-amber-900 rounded-md px-4 py-2 shadow-sm fade-in`
+        }>
             <div className="flex items-center gap-2">
                 <IoAlertCircle className="h-5 w-5 flex-shrink-0" />
                 <span className="text-sm">{message}</span>
