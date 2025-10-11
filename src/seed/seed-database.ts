@@ -63,8 +63,8 @@ async function main() {
                     data: {
                         productId: dbProduct.id,
                         color,
-                        size: size as Size, // 👈 ahora sí se guarda la talla
-                        inStock: stock, // 👈 stock directo por talla
+                        size: size as Size,
+                        inStock: stock,
                     },
                 });
 
