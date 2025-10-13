@@ -61,7 +61,16 @@ export function ProductsInCheckout() {
                                 <CartWarning
                                     message={warning.message}
                                     onClose={() =>
-                                        setWarnings(prev => prev.filter(w => w.slug !== warning.slug))
+                                        setWarnings(prev =>
+                                            prev.filter(
+                                                w =>
+                                                    !(
+                                                        w.slug === warning.slug &&
+                                                        w.size === warning.size &&
+                                                        w.color === warning.color
+                                                    )
+                                            )
+                                        )
                                     }
                                 />
                             )}

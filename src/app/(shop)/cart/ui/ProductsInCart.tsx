@@ -1,21 +1,21 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
-import { useCartStore } from '@/store';
-import { useCartStockValidation } from '@/hooks';
-import { ProductImage, QuantitySelector, CartWarning } from '@/components';
-import { ProductsInCartLoading } from '@/app/(shop)/cart/ui/ProductsInCartLoading';
+import {useCartStore} from '@/store';
+import {useCartStockValidation} from '@/hooks';
+import {ProductImage, QuantitySelector, CartWarning} from '@/components';
+import {ProductsInCartLoading} from '@/app/(shop)/cart/ui/ProductsInCartLoading';
 
 export function ProductsInCart() {
     const [loaded, setLoaded] = useState(false);
     const cart = useCartStore(state => state.cart);
     const updateProductQuantity = useCartStore(state => state.updateProductQuantity);
     const removeProductFromCart = useCartStore(state => state.removeProductFromCart);
-    const { warnings, setWarnings } = useCartStockValidation({ delayWindow: 1500 });
+    const {warnings, setWarnings} = useCartStockValidation({delayWindow: 1500});
 
     useEffect(() => setLoaded(true), []);
 
-    if (!loaded) return <ProductsInCartLoading />;
+    if (!loaded) return <ProductsInCartLoading/>;
 
     return (
         <>
@@ -33,7 +33,7 @@ export function ProductsInCart() {
                             alt={product.title}
                             width={100}
                             height={100}
-                            style={{ width: '100px', height: '100px' }}
+                            style={{width: '100px', height: '100px'}}
                             className="mr-5 rounded"
                         />
 
@@ -65,7 +65,16 @@ export function ProductsInCart() {
                                 <CartWarning
                                     message={warning.message}
                                     onClose={() =>
-                                        setWarnings(prev => prev.filter(w => w.slug !== warning.slug))
+                                        setWarnings(prev =>
+                                            prev.filter(
+                                                w =>
+                                                    !(
+                                                        w.slug === warning.slug &&
+                                                        w.size === warning.size &&
+                                                        w.color === warning.color
+                                                    )
+                                            )
+                                        )
                                     }
                                 />
                             )}
