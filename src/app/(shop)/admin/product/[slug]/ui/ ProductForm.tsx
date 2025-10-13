@@ -60,7 +60,8 @@ export const ProductForm = ({ product, categories }: Props) => {
         defaultValues:{
             ...product,
             tags: product.tags?.join(', '),
-            sizes: product.sizes ?? [],
+            //sizes: product.sizes ?? [],
+            sizes: ["XL", "XS", "GENERIC"],
             images: undefined
         }
         });

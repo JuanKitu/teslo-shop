@@ -1,29 +1,28 @@
 'use server';
+
 import { auth } from '@/auth.config';
 import prisma from '@/lib/prisma';
-import {GetOrderResult, OrderWithDetails} from "@/interfaces";
+import { GetOrderResult, OrderWithDetails } from '@/interfaces';
 
 export async function getOrderById(id: string): Promise<GetOrderResult> {
     const session = await auth();
     if (!session?.user) {
-        return {order: undefined, ok: false, message: 'Debe de estar autenticado' };
+        return { ok: false, message: 'Debe de estar autenticado' };
     }
 
     try {
-        const order: OrderWithDetails | null = await prisma.order.findUnique({
+        const order = await prisma.order.findUnique({
             where: { id },
             include: {
                 OrderAddress: true,
                 OrderItem: {
-                    select: {
-                        price: true,
-                        quantity: true,
-                        size: true,
+                    include: {
                         product: {
-                            select: {
-                                title: true,
-                                slug: true,
-                                ProductImage: { select: { url: true }, take: 1 },
+                            include: {
+                                images: true,
+                                variants: {
+                                    include: { images: true },
+                                },
                             },
                         },
                     },
@@ -32,18 +31,49 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
         });
 
         if (!order) {
-            return {order: undefined, ok: false, message: 'Hubo un error en la orden' };
+            return { ok: false, message: 'La orden no existe' };
         }
 
-        // Validación de rol de usuario
-        if (session.user.role === 'user' && session.user.id !== order?.userId) {
-            return {order, ok: false, message: 'Hubo un error con el usuario' };
+        if (session.user.role === 'user' && session.user.id !== order.userId) {
+            return { ok: false, message: 'No tiene acceso a esta orden' };
         }
 
-        return {message: "", ok: true, order };
-    } catch (error: unknown) {
+        const orderWithDetails: OrderWithDetails = {
+            ...order,
+            OrderItem: order.OrderItem.map((item) => {
+                // Buscar variante (si la orden tiene color/size)
+                const variant = item.product.variants.find(
+                    (v) =>
+                        v.size === item.size &&
+                        (v.color === (item as any).color || !v.color)
+                );
+
+                const image =
+                    variant?.images?.[0]?.url ||
+                    item.product.images?.[0]?.url ||
+                    '/imgs/placeholder.jpg';
+
+                return {
+                    price: item.price,
+                    quantity: item.quantity,
+                    product: {
+                        id: item.product.id,
+                        title: item.product.title,
+                        slug: item.product.slug,
+                        image,
+                        color: (item as any).color || variant?.color,
+                        size: item.size || variant?.size,
+                    },
+                };
+            }),
+        };
+
+        return { ok: true, message: '', order: orderWithDetails };
+    } catch (error) {
         console.error(error);
-        const message = error instanceof Error ? error.message : 'Orden no existe';
-        return {order: undefined, ok: false, message };
+        return {
+            ok: false,
+            message: error instanceof Error ? error.message : 'Error al obtener la orden',
+        };
     }
 }

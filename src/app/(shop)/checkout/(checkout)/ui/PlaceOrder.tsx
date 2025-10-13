@@ -33,6 +33,7 @@ export function PlaceOrder() {
             productId: product.id,
             quantity: product.quantity,
             size: product.size,
+            color: product.color,
         }));
 
 

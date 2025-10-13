@@ -1,4 +1,3 @@
-export type {StockLabelRef} from './product/stock-label/StockLabel';
 export {CartWarning} from './cart/CartWarning'
 export {Footer} from './ui/footer/Footer';
 export {FormInput} from './form/FormInput';
@@ -21,3 +20,4 @@ export {SizeSelector} from './product/size-selector/SizeSelector';
 export {StockLabel} from './product/stock-label/StockLabel';
 export {Title} from './ui/title/Title';
 export {TopMenu} from './ui/top-menu/TopMenu';
+export {ColorSelector} from './product/color-selector/ColorSelector';

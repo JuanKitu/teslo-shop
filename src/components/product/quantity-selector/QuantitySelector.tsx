@@ -1,30 +1,30 @@
-import React from 'react'
-import {IoAddCircleOutline, IoRemoveCircleOutline} from "react-icons/io5";
+'use client';
+import React from 'react';
+import { IoAddCircleOutline, IoRemoveCircleOutline } from 'react-icons/io5';
+
 interface Props {
-    quantity: number;
-    onQuantityChanged: (value: number) => void;
-    totalStock: number;
+    quantity: number;       // cantidad actual
+    maxStock: number;       // stock máximo disponible
+    onQuantityChanged: (newQty: number) => void; // callback al cambiar
 }
-export function QuantitySelector({quantity, onQuantityChanged, totalStock}: Props) {
-    const oQuantityChange = (value: number) => {
-        const newValue = quantity + value;
-        if(newValue < 1 ) return;
-        if(newValue > totalStock) return;
-        onQuantityChanged(newValue);
-    }
+
+export function QuantitySelector({ quantity, maxStock, onQuantityChanged }: Props) {
+    const changeQuantity = (delta: number) => {
+        let newQty = quantity + delta;
+        if (newQty < 1) newQty = 1;
+        if (newQty > maxStock) newQty = maxStock;
+        onQuantityChanged(newQty);
+    };
+
     return (
-        <div className="flex">
-            <button
-                onClick={() => oQuantityChange(-1)}
-            >
-                <IoRemoveCircleOutline className="cursor-pointer" size={30}/>
+        <div className="flex items-center my-3">
+            <button onClick={() => changeQuantity(-1)}>
+                <IoRemoveCircleOutline size={30} />
             </button>
-            <span className="w-20 mx-3 px-5 bg-gray-200 text-center rounded">{quantity}</span>
-            <button
-                onClick={() => oQuantityChange(1)}
-            >
-                <IoAddCircleOutline className="cursor-pointer" size={30}/>
+            <span className="w-16 text-center mx-2">{quantity}</span>
+            <button onClick={() => changeQuantity(1)}>
+                <IoAddCircleOutline size={30} />
             </button>
         </div>
-    )
+    );
 }

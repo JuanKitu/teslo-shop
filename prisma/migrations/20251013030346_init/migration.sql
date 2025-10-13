@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Size" AS ENUM ('XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL');
+CREATE TYPE "Size" AS ENUM ('XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'GENERIC');
 
 -- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('men', 'women', 'kid', 'unisex');
@@ -33,8 +33,8 @@ CREATE TABLE "Product" (
 CREATE TABLE "ProductVariant" (
     "id" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "size" "Size",
-    "color" TEXT,
+    "size" "Size" NOT NULL DEFAULT 'GENERIC',
+    "color" TEXT NOT NULL DEFAULT 'GENERIC',
     "inStock" INTEGER NOT NULL DEFAULT 0,
     "price" DOUBLE PRECISION,
     "sku" TEXT,
@@ -111,7 +111,8 @@ CREATE TABLE "OrderItem" (
     "id" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
-    "size" "Size" NOT NULL,
+    "size" "Size" NOT NULL DEFAULT 'GENERIC',
+    "color" TEXT NOT NULL DEFAULT 'GENERIC',
     "orderId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
 

@@ -1,17 +1,20 @@
-export type Size = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL';
-export type Type = 'shirts'|'pants'|'hoodies'|'hats';
+export type Size = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL' | 'GENERIC';
 export interface Product {
     id: string;
     description: string;
     images: string[];
-    inStock: number;
     price: number;
-    sizes: Size[];
     slug: string;
     tags: string[];
     title: string;
-    //type: Type;
+    variants: ProductVariant[];
     gender: Category;
+}
+export interface ProductVariant {
+    color: string;
+    size: Size;
+    stock: number;
+    images: string[];
 }
 export interface ProductImage {
     id: number;
@@ -28,10 +31,11 @@ export const labelCategory:Record<Category, string> = {
 export interface CartProduct{
     id: string;
     slug: string;
-    title: string;
-    price: number;
-    quantity: number;
-    size: Size;
     image: string;
     inStock: number;
+    title: string;
+    price: number;
+    size: Size;
+    color: string;
+    quantity: number;
 }

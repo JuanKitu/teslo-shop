@@ -1,17 +1,21 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import type { Size } from '@/interfaces';
 
 export interface CartItemInput {
     slug: string;
     quantity: number;
-    size?: string; // opcional, por si manejás talles
+    color?: string;
+    size?: Size;
 }
 
 export interface ValidateCartResult {
     ok: boolean;
     adjustedItems?: {
         slug: string;
+        color?: string;
+        size?: Size;
         newQuantity: number;
         title: string;
     }[];
@@ -19,40 +23,47 @@ export interface ValidateCartResult {
 }
 
 /**
- * Válida el stock de todos los productos del carrito contra la BD.
+ * Valida el stock de todos los productos del carrito contra la BD.
  * Si alguno tiene menos stock que el solicitado, devuelve los ajustes.
  */
 export async function validateCartStock(
     cartItems: CartItemInput[]
 ): Promise<ValidateCartResult> {
     try {
-        if (cartItems.length === 0) {
-            return { ok: true };
-        }
+        if (cartItems.length === 0) return { ok: true };
 
-        const slugs = cartItems.map(i => i.slug);
+        const slugs = cartItems.map((item) => item.slug);
 
-        // Traemos los productos actuales desde la BD
+        // Traemos productos y sus variantes
         const productsInDb = await prisma.product.findMany({
             where: { slug: { in: slugs } },
-            select: { slug: true, inStock: true, title: true },
+            include: { variants: true },
         });
 
         const adjustedItems: ValidateCartResult['adjustedItems'] = [];
-
         for (const item of cartItems) {
-            const product = productsInDb.find(p => p.slug === item.slug);
-            if (!product) continue; // producto eliminado
+            const product = productsInDb.find((p) => p.slug === item.slug);
+            if (!product) continue; // producto eliminado de la BD
 
-            if (product.inStock < item.quantity) {
+            // Buscar variante exacta: coincide color y talla si están definidos
+            const variant = product.variants.find((v) => {
+                const colorMatch = item.color ? v.color === item.color : true;
+                const sizeMatch = item.size ? v.size === item.size : true;
+                return colorMatch && sizeMatch;
+            });
+
+            const availableStock = variant?.inStock ?? 0;
+
+            if (availableStock < item.quantity) {
                 adjustedItems.push({
                     slug: item.slug,
-                    newQuantity: product.inStock,
+                    color: item.color,
+                    size: item.size,
+                    newQuantity: availableStock,
                     title: product.title,
                 });
             }
         }
-
         if (adjustedItems.length > 0) {
             return {
                 ok: false,

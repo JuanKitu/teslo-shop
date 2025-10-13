@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import {useCartStore, useCheckoutStore} from "@/store";
 import { currencyFormat } from "@/utils";
 import { CartWarning } from "@/components/cart/CartWarning";
 import { ProductsInCartLoading } from "@/app/(shop)/cart/ui/ProductsInCartLoading";
 import { useCartStockValidation } from "@/hooks";
+import {ProductImage} from "@/components";
 
 export function ProductsInCheckout() {
     const [loaded, setLoaded] = useState(false);
@@ -16,7 +16,6 @@ export function ProductsInCheckout() {
 
     if (!loaded) return <ProductsInCartLoading />;
     const errors = warnings.filter((w) => w.type === "error");
-    console.log("cartel de error", errors);
 
     return (
         <>
@@ -31,15 +30,20 @@ export function ProductsInCheckout() {
                 />
             ))}
             {cart.map(product => {
-                const warning = warnings.find(w => w.slug === product.slug);
+                const warning = warnings.find(
+                    (warn) =>
+                        warn.slug === product.slug &&
+                        (warn.size ? warn.size === product.size : true) &&
+                        (warn.color ? warn.color === product.color : true)
+                );
                 return (
                     <div key={`${product.slug}-${product.size}`} className="flex mb-5">
-                        <Image
-                            src={`/products/${product.image}`}
+                        <ProductImage
+                            src={product.image}
                             alt={product.title}
                             width={100}
                             height={100}
-                            style={{width: '100px', height: '100px'}}
+                            style={{ width: '100px', height: '100px' }}
                             className="mr-5 rounded"
                         />
                         <div>
@@ -47,6 +51,7 @@ export function ProductsInCheckout() {
                 {product.title} - {product.quantity} unidades
               </span>
                             <p>Talle: {product.size}</p>
+                            <p>Color: {product.color}</p>
                             <p>Precio unitario: {currencyFormat(product.price)}</p>
                             <p className="font-bold">
                                 Total: {currencyFormat(product.price * product.quantity)}

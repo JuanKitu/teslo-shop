@@ -1,44 +1,61 @@
-'use server';
-import prisma from '@/lib/prisma';
-import {v2 as cloudinary} from 'cloudinary';
-import { revalidatePath } from 'next/cache';
-cloudinary.config( process.env.CLOUDINARY_URL ?? '' );
+"use server";
+//TODO: Revisar seguro necesita rework
+import prisma from "@/lib/prisma";
+import { v2 as cloudinary } from "cloudinary";
+import { revalidatePath } from "next/cache";
 
-export async function deleteProductImage( imageId: number, imageUrl: string ){
-    if ( !imageUrl.startsWith('http') ) {
+cloudinary.config(process.env.CLOUDINARY_URL ?? "");
+
+export async function deleteProductImage(imageId: number, imageUrl: string) {
+    // Evita borrar imágenes locales del filesystem
+    if (!imageUrl.startsWith("http")) {
         return {
             ok: false,
-            error: 'No se pueden borrar imagenes de FS'
-        }
+            error: "No se pueden borrar imágenes locales (FS)",
+        };
     }
-    const imageName = imageUrl
-        .split('/')
-        .pop()
-        ?.split('.')[0] ?? '';
+
+    // Extrae el nombre de la imagen para Cloudinary
+    const imageName = imageUrl.split("/").pop()?.split(".")[0] ?? "";
+
     try {
-        await cloudinary.uploader.destroy( imageName );
+        // 1️⃣ Eliminar de Cloudinary
+        await cloudinary.uploader.destroy(imageName);
+
+        // 2️⃣ Eliminar de la base
         const deletedImage = await prisma.productImage.delete({
-            where: {
-                id: imageId
-            },
+            where: { id: imageId },
             select: {
                 product: {
+                    select: { slug: true },
+                },
+                variant: {
                     select: {
-                        slug: true
-                    }
-                }
-            }
-        })
+                        product: {
+                            select: { slug: true },
+                        },
+                    },
+                },
+            },
+        });
 
-        // Revalidar los paths
-        revalidatePath(`/admin/products`)
-        revalidatePath(`/admin/product/${ deletedImage.product.slug }`);
-        revalidatePath(`/product/${ deletedImage.product.slug }`);
+        // 3️⃣ Determinar a qué pertenece (producto o variante)
+        const productSlug =
+            deletedImage.product?.slug || deletedImage.variant?.product.slug;
+
+        // 4️⃣ Revalidar paths relevantes
+        if (productSlug) {
+            revalidatePath(`/admin/products`);
+            revalidatePath(`/admin/product/${productSlug}`);
+            revalidatePath(`/product/${productSlug}`);
+        }
+
+        return { ok: true };
     } catch (error) {
-        console.log(error);
+        console.error("[deleteProductImage]", error);
         return {
             ok: false,
-            message: 'No se pudo eliminar la imagen'
-        }
+            message: "No se pudo eliminar la imagen",
+        };
     }
 }

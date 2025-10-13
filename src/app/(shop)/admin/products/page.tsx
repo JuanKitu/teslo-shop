@@ -56,7 +56,7 @@ export default async function ProductsAdminPage({searchParams}: Props) {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <Link href={`/product/${product.slug}`}>
                                         <ProductImage
-                                            src={product.ProductImage[0]?.url}
+                                            src={product.images[0]}
                                             alt={product.title}
                                             width={80}
                                             height={80}
@@ -76,10 +76,10 @@ export default async function ProductsAdminPage({searchParams}: Props) {
                                     {product.gender}
                                 </td>
                                 <td className="text-sm font-bold text-gray-900 px-6 py-4 whitespace-nowrap">
-                                    {product.inStock}
+                                    {/*{product.inStock}*/} 10
                                 </td>
                                 <td className="text-sm font-bold text-gray-900 px-6 py-4 whitespace-nowrap">
-                                    {product.sizes.join(', ')}
+                                    {/*{product.sizes.join(', ')}*/} GENERIC
                                 </td>
                             </tr>
                         ))

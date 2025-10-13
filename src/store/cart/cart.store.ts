@@ -5,12 +5,18 @@ import {persist} from "zustand/middleware";
 interface CartState {
     cart: CartProduct[]
 }
-
+interface PropsUpdateVariant {
+    slug: string;
+    newQuantity: number;
+    size?: string;
+    color?: string;
+}
 interface Actions {
     addProductToCart: (product: CartProduct) => void;
     getTotalItems: () => number;
     updateProductQuantity: (product: CartProduct, quantity: number) => void;
-    updateProductQuantityBySlug: (slug: string, newQuantity: number) => void; // ✅ NUEVA
+    updateProductQuantityBySlug: (slug: string, newQuantity: number) => void;
+    updateProductQuantityByVariant: (variant:PropsUpdateVariant) => void;
     removeProductFromCart: (product: CartProduct) => void;
     getSummaryInformation: () => {
         subtotal: number;
@@ -64,7 +70,19 @@ const storeAPI: StateCreator<CartStore> = (set, get) => ({
         );
         set({ cart: updatedCart });
     },
+    updateProductQuantityByVariant: (variant) => {
+        const { cart } = get();
+        const updatedCart = cart.map((item) => {
+            const matchSlug = item.slug === variant.slug;
+            const matchSize = variant.size ? item.size === variant.size : true;
+            const matchColor = variant.color ? item.color === variant.color : true;
 
+            return matchSlug && matchSize && matchColor
+                ? { ...item, quantity: Math.min(variant.newQuantity, item.inStock) }
+                : item;
+        });
+        set({ cart: updatedCart });
+    },
     getTotalItems: () => {
         const {cart} = get();
         return cart.reduce((total, item) => total + item.quantity, 0);

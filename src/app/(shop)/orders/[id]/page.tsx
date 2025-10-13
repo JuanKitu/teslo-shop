@@ -1,6 +1,5 @@
 import React from 'react'
-import {PaypalButton, Title} from "@/components";
-import Image from "next/image";
+import {PaypalButton, ProductImage, Title} from "@/components";
 import {getOrderById} from "@/actions";
 import {redirect} from "next/navigation";
 import {currencyFormat} from "@/utils";
@@ -28,20 +27,23 @@ export default async function orderPage({params}: Props) {
                         {/* Items */}
                         {
                             order.OrderItem.map(item => (
-                                <div key={item.product.slug + '-' + item.size} className="flex mb-5">
-                                    <Image
-                                        src={`/products/${item.product.ProductImage[0].url}`}
+                                <div key={item.product.slug + '-' + item.product.size} className="flex mb-5">
+
+                                    <ProductImage
+                                        src={item.product.image}
                                         alt={item.product.title}
-                                        width={100}
                                         style={{
-                                            width: '100px',
-                                            height: '100px',
+                                            width: 100,
+                                            height: 100,
                                         }}
+                                        width={100}
                                         height={100}
                                         className="mr-5 rounded"
                                     />
                                     <div>
                                         <p>{item.product.title}</p>
+                                        <p>Talle: {item.product.size}</p>
+                                        <p>Color: {item.product.color}</p>
                                         <p>${item.price} x {item.quantity}</p>
                                         <p className="font-bold">Subtotal ${item.price * item.quantity}</p>
                                     </div>
