@@ -9,6 +9,7 @@ export interface Product {
     title: string;
     variants: ProductVariant[];
     gender: Category;
+    ProductImage: ProductImage[];
 }
 export interface ProductVariant {
     color: string;
@@ -19,7 +20,8 @@ export interface ProductVariant {
 export interface ProductImage {
     id: number;
     url: string;
-    productId: string;
+    productId: string | null;
+    variantId: string | null;
 }
 type Category = 'men'|'women'|'kid'|'unisex';
 export const labelCategory:Record<Category, string> = {

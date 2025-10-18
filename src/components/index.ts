@@ -21,3 +21,4 @@ export {StockLabel} from './product/stock-label/StockLabel';
 export {Title} from './ui/title/Title';
 export {TopMenu} from './ui/top-menu/TopMenu';
 export {ColorSelector} from './product/color-selector/ColorSelector';
+export {FadeImage} from './product/fade-image/FadeImage'

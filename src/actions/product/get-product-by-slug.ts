@@ -5,47 +5,40 @@ import type { Product, ProductVariant } from "@/interfaces";
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
     try {
-        const product = await prisma.product.findUnique({
+        const product = await prisma.product.findFirst({
             where: { slug },
             include: {
-                images: { select: { url: true } },
-                variants: {
-                    include: {
-                        images: { select: { url: true } },
-                    },
-                },
+                images: true,
+                variants: { include: { images: true } },
                 category: { select: { name: true } },
             },
         });
 
         if (!product) return null;
-
-        // 🖼️ Combinar imágenes generales + de variantes (sin duplicar)
-        const allImages = Array.from(
+        const {images: ProductImage, ...restProduct} = product;
+        const images = Array.from(
             new Set([
-                ...product.images.map((img) => img.url),
-                ...product.variants.flatMap((v) => v.images.map((img) => img.url)),
+                ...ProductImage.map((i) => i.url),
+                ...product.variants.flatMap((v) => v.images.map((i) => i.url)),
             ])
         );
 
-        // 🎨 Adaptar variantes al nuevo modelo
-        const formattedVariants: ProductVariant[] = product.variants.map((v) => ({
-            color: v.color ?? "",
-            size: v.size ?? "GENERIC",
-            stock: v.inStock ?? 0,
-            images: v.images.map((img) => img.url),
-        }));
+        const variants: ProductVariant[] = product.variants.map(
+            ({ color = "", size = "GENERIC", inStock = 0, price = 0, images = [] }) => ({
+                color,
+                size,
+                stock: inStock,
+                price,
+                ProductImage: images,
+                images: images.map((i) => i.url),
+            })
+        );
 
         return {
-            id: product.id,
-            title: product.title,
-            description: product.description,
-            price: product.price,
-            slug: product.slug,
-            tags: product.tags,
-            gender: product.gender,
-            images: allImages,
-            variants: formattedVariants,
+            ...restProduct,
+            ProductImage,
+            images,     // sobrescribe el array de objetos con URLs
+            variants,   // sobrescribe los objetos anidados ya formateados
         };
     } catch (error) {
         console.error("[getProductBySlug]", error);
