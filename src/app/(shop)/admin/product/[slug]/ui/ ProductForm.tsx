@@ -1,20 +1,21 @@
 'use client';
 
-import React, { useState } from "react";
-import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
-import { IoAlertCircle, IoAddCircleOutline, IoTrash } from "react-icons/io5";
-import { useRouter } from "next/navigation";
+import React, {useState} from "react";
+import {useForm, SubmitHandler, useFieldArray} from "react-hook-form";
+import {IoAlertCircle, IoAddCircleOutline, IoTrash} from "react-icons/io5";
+import {useRouter} from "next/navigation";
 import clsx from "clsx";
 
-import { createUpdateProduct, deleteProductImage } from "@/actions";
-import { FormInput, FormSelect, FormTextArea, ProductImage } from "@/components";
-import type { Category, Product, ProductVariant, ProductImage as ProductWithImage, Size } from "@/interfaces";
+import {createUpdateProduct, deleteProductImage} from "@/actions";
+import {FormInput, FormSelect, FormTextArea, ProductImage} from "@/components";
+import type {Category, Gender, Product, ProductVariant, ProductImage as ProductWithImage, Size} from "@/interfaces";
 
 interface VariantInput {
     color: string;
     size: string;
     price: number;
-    stock: number;
+    inStock: number;
+    images?: FileList;
 }
 
 interface FormInputs {
@@ -22,6 +23,7 @@ interface FormInputs {
     slug: string;
     description: string;
     tags: string;
+    price: number;
     gender: "men" | "women" | "kid" | "unisex";
     categoryId: string;
     images?: FileList;
@@ -36,20 +38,20 @@ interface Props {
     categories: Category[];
 }
 
-const genders = [
-    { id: "men", name: "Hombre" },
-    { id: "women", name: "Mujer" },
-    { id: "kid", name: "Niño" },
-    { id: "unisex", name: "Unisex" },
+const genders: Gender[] = [
+    {id: "men", name: "Hombre"},
+    {id: "women", name: "Mujer"},
+    {id: "kid", name: "Niño"},
+    {id: "unisex", name: "Unisex"},
 ];
 
 const validSizes = ["GENERIC", "XS", "S", "M", "L", "XL", "XXL"];
 
-export function ProductForm({ product = {}, categories }: Props) {
+export function ProductForm({product = {}, categories}: Props) {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const router = useRouter();
 
-    const { register, handleSubmit, control, formState: { errors, isValid } } = useForm<FormInputs>({
+    const {register, handleSubmit, control, formState: {errors, isValid}} = useForm<FormInputs>({
         mode: "onChange",
         defaultValues: {
             title: product.title ?? "",
@@ -57,19 +59,20 @@ export function ProductForm({ product = {}, categories }: Props) {
             description: product.description ?? "",
             tags: Array.isArray(product.tags) ? product.tags.join(", ") : (product.tags ?? ""),
             gender: (product.gender as FormInputs["gender"]) ?? "unisex",
-            categoryId: product?.gender ?? "",
+            categoryId: product?.categoryId ?? "",
+            price: product?.price,
             images: undefined,
             variants: (product.variants ?? []).map((v) => ({
                 color: "color" in v ? v.color ?? "" : "",
                 size: "size" in v ? (v.size as Size) ?? "GENERIC" : "GENERIC",
                 price: Number("price" in v ? v.price ?? 0 : 0),
-                stock: Number("stock" in v ? v.stock ?? 0 : 0),
+                inStock: Number("stock" in v ? v.stock ?? 0 : 0),
             })),
         },
     });
 
     // 🧩 Hook para manejar array de variantes dinámicamente
-    const { fields, append, remove } = useFieldArray({
+    const {fields, append, remove} = useFieldArray({
         control,
         name: "variants",
     });
@@ -94,7 +97,7 @@ export function ProductForm({ product = {}, categories }: Props) {
         // Variantes (ya vienen completas desde RHF)
         formData.append("variants", JSON.stringify(data.variants));
 
-        const { ok, product: updated } = await createUpdateProduct(formData);
+        const {ok, product: updated} = await createUpdateProduct(formData);
         if (!ok) {
             setErrorMessage("No se pudo guardar el producto. Intenta nuevamente.");
             return;
@@ -109,12 +112,35 @@ export function ProductForm({ product = {}, categories }: Props) {
             <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
                 <h2 className="text-lg font-semibold mb-4">Información del producto</h2>
 
-                <FormInput label="Título" registration={register("title", { required: "El título es requerido" })} error={errors.title} className="mb-3" classNameInput="p-2 rounded-md" />
-                <FormInput label="Slug" registration={register("slug", { required: "El slug es requerido" })} error={errors.slug} className="mb-3" classNameInput="p-2 rounded-md" />
-                <FormTextArea label="Descripción" rows={5} registration={register("description", { required: "La descripción es requerida" })} error={errors.description} className="mb-3" classNameInput="p-2 rounded-md" />
-                <FormInput label="Tags (separados por comas)" registration={register("tags", { required: "Los tags son requeridos" })} error={errors.tags} className="mb-3" classNameInput="p-2 rounded-md" />
-                <FormSelect label="Género" registration={register("gender", { required: "El género es requerido" })} options={genders} getOptionValue={c => c.id} getOptionLabel={c => c.name} error={errors.gender} className="mb-3" classNameSelect="p-2 rounded-md" />
-                <FormSelect label="Categoría" registration={register("categoryId", { required: "La categoría es requerida" })} options={categories} getOptionValue={c => c.id} getOptionLabel={c => c.name} error={errors.categoryId} className="mb-3" classNameSelect="p-2 rounded-md" />
+                <FormInput label="Título" registration={register("title", {required: "El título es requerido"})}
+                           error={errors.title} className="mb-3" classNameInput="p-2 rounded-md"/>
+                <FormInput label="Slug" registration={register("slug", {required: "El slug es requerido"})}
+                           error={errors.slug} className="mb-3" classNameInput="p-2 rounded-md"/>
+                <FormTextArea label="Descripción" rows={5}
+                              registration={register("description", {required: "La descripción es requerida"})}
+                              error={errors.description} className="mb-3" classNameInput="p-2 rounded-md"/>
+                <FormInput label="Tags (separados por comas)"
+                           registration={register("tags", {required: "Los tags son requeridos"})} error={errors.tags}
+                           className="mb-3" classNameInput="p-2 rounded-md"/>
+                <FormInput
+                    label="Precio"
+                    classNameInput="p-2 rounded-md"
+                    className="mb-2"
+                    type="number"
+                    registration={register("price", { required: "El precio es requerido", min: 0 })}
+                    error={errors.price}
+                />
+                <FormSelect<Gender> label="Género" registration={register("gender", {required: "El género es requerido"})}
+                            options={genders} getOptionValue={c => c.id} getOptionLabel={c => c.name}
+                            error={errors.gender} className="mb-3" classNameSelect="p-2 rounded-md"/>
+                <FormSelect<Category>
+                    label="Categoría"
+                    registration={register("categoryId", {required: "La categoría es requerida"})}
+                    options={categories}
+                    getOptionValue={c => c.id}
+                    getOptionLabel={c => c.name}
+                    error={errors.categoryId} className="mb-3"
+                    classNameSelect="p-2 rounded-md"/>
 
                 <button
                     type="submit"
@@ -125,8 +151,9 @@ export function ProductForm({ product = {}, categories }: Props) {
                 </button>
 
                 {errorMessage && (
-                    <div className="mt-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-md">
-                        <IoAlertCircle className="w-5 h-5" />
+                    <div
+                        className="mt-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-md">
+                        <IoAlertCircle className="w-5 h-5"/>
                         <span>{errorMessage}</span>
                     </div>
                 )}
@@ -149,7 +176,8 @@ export function ProductForm({ product = {}, categories }: Props) {
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                             {product.ProductImage.map(img => (
                                 <div key={img.id} className="relative">
-                                    <ProductImage src={img.url} alt={product.title ?? ""} width={300} height={300} className="rounded-md shadow-sm" />
+                                    <ProductImage src={img.url} alt={product.title ?? ""} width={300} height={300}
+                                                  className="rounded-md shadow-sm"/>
                                     <button
                                         type="button"
                                         onClick={() => deleteProductImage(img.id, img.url)}
@@ -169,26 +197,27 @@ export function ProductForm({ product = {}, categories }: Props) {
                         <h2 className="text-lg font-semibold">Variantes</h2>
                         <button
                             type="button"
-                            onClick={() => append({ color: "", size: "GENERIC", price: 0, stock: 0 })}
+                            onClick={() => append({color: "", size: "GENERIC", price: 0, inStock: 0})}
                             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
                         >
-                            <IoAddCircleOutline className="w-5 h-5" /> Agregar variante
+                            <IoAddCircleOutline className="w-5 h-5"/> Agregar variante
                         </button>
                     </div>
 
                     {fields.length === 0 && <p className="text-gray-500 text-sm">No hay variantes aún.</p>}
                     <div className="space-y-4">
                         {fields.map((field, i) => (
-                            <div key={field.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2 p-3 border rounded-md bg-gray-50">
+                            <div key={field.id}
+                                 className="grid grid-cols-1 sm:grid-cols-5 gap-2 p-3 border rounded-md bg-gray-50">
                                 <FormInput
                                     label="Color"
-                                    registration={register(`variants.${i}.color` as const, { required: true })}
+                                    registration={register(`variants.${i}.color` as const, {required: true})}
                                     classNameInput="p-2 border rounded-md"
                                 />
 
                                 <FormSelect
                                     label="Talle"
-                                    registration={register(`variants.${i}.size` as const, { required: true })}
+                                    registration={register(`variants.${i}.size` as const, {required: true})}
                                     options={validSizes}
                                     getOptionValue={(s) => s}
                                     getOptionLabel={(s) => s}
@@ -198,14 +227,20 @@ export function ProductForm({ product = {}, categories }: Props) {
                                 <FormInput
                                     label="Precio"
                                     type="number"
-                                    registration={register(`variants.${i}.price` as const, { valueAsNumber: true, required: true })}
+                                    registration={register(`variants.${i}.price` as const, {
+                                        valueAsNumber: true,
+                                        required: true
+                                    })}
                                     classNameInput="p-2 border rounded-md"
                                 />
 
                                 <FormInput
                                     label="Stock"
                                     type="number"
-                                    registration={register(`variants.${i}.stock` as const, { valueAsNumber: true, required: true })}
+                                    registration={register(`variants.${i}.inStock` as const, {
+                                        valueAsNumber: true,
+                                        required: true
+                                    })}
                                     classNameInput="p-2 border rounded-md"
                                 />
 
@@ -214,7 +249,7 @@ export function ProductForm({ product = {}, categories }: Props) {
                                     onClick={() => remove(i)}
                                     className="flex items-center justify-center text-red-600 hover:text-red-700"
                                 >
-                                    <IoTrash className="w-5 h-5" />
+                                    <IoTrash className="w-5 h-5"/>
                                 </button>
                             </div>
                         ))}

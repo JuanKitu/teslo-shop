@@ -7,6 +7,7 @@ export interface Product {
     slug: string;
     tags: string[];
     title: string;
+    categoryId: string,
     variants: ProductVariant[];
     gender: Category;
     ProductImage: ProductImage[];
