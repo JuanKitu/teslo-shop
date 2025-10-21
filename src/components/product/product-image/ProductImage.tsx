@@ -4,9 +4,10 @@ interface Props {
     src?: string;
     alt: string;
     className?: React.StyleHTMLAttributes<HTMLImageElement>['className'];
-    width: number;
+    width?: number;
     style?: React.StyleHTMLAttributes<HTMLImageElement>['style'];
-    height: number;
+    height?: number;
+    fill?: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
 }
@@ -16,6 +17,7 @@ export function ProductImage({
                                  className,
                                  width,
                                  height,
+                                 fill,
                                  style,
                                  onMouseEnter,
                                  onMouseLeave,
@@ -30,6 +32,7 @@ export function ProductImage({
             alt={alt}
             style={style}
             width={width}
+            fill={fill}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             height={height}
