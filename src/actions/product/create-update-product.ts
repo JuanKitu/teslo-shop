@@ -4,9 +4,7 @@ import prisma from '@/lib/prisma';
 import {revalidatePath} from 'next/cache';
 import {Gender, Product, Size} from '@prisma/client';
 import {z} from 'zod';
-import {v2 as cloudinary} from 'cloudinary';
 
-cloudinary.config(process.env.CLOUDINARY_URL ?? '');
 
 const productSchema = z.object({
     id: z.uuid().optional().nullable(),
@@ -41,7 +39,7 @@ export async function createUpdateProduct(formData: FormData) {
 
     if (!productParsed.success) {
         console.log(productParsed.error);
-        return { ok: false, errors: productParsed.error};
+        return {ok: false, errors: productParsed.error};
     }
 
     const productData = productParsed.data;
@@ -60,7 +58,7 @@ export async function createUpdateProduct(formData: FormData) {
             if (productData.id) {
                 // Actualizar producto
                 product = await tx.product.update({
-                    where: { id: productData.id },
+                    where: {id: productData.id},
                     data: {
                         title: productData.title,
                         slug: productData.slug,
@@ -68,13 +66,13 @@ export async function createUpdateProduct(formData: FormData) {
                         price: productData.price,
                         categoryId: productData.categoryId,
                         gender: productData.gender,
-                        tags: { set: tagsArray },
+                        tags: {set: tagsArray},
                     },
                 });
 
                 // Reemplazar variantes
                 await tx.productVariant.deleteMany({
-                    where: { productId: product.id },
+                    where: {productId: product.id},
                 });
             } else {
                 // Crear producto
@@ -86,7 +84,7 @@ export async function createUpdateProduct(formData: FormData) {
                         price: productData.price,
                         categoryId: productData.categoryId,
                         gender: productData.gender,
-                        tags: { set: tagsArray },
+                        tags: {set: tagsArray},
                     },
                 });
             }
@@ -98,20 +96,41 @@ export async function createUpdateProduct(formData: FormData) {
                 sku: `${product.id.slice(0, 6)}-${v.size}-${Math.random().toString(36).slice(2, 8)}`,
             }));
 
-            await tx.productVariant.createMany({ data: variantsData });
+            await tx.productVariant.createMany({data: variantsData});
 
-            // Subir imágenes generales
-            const files = formData.getAll('images') as File[];
-            if (files.length > 0) {
-                const images = await uploadImages(files);
+            // cargar images
+            const newImages = formData.getAll("images") as string[];
+            // Buscar las imágenes actuales (solo si es edición)
+            const existingImages =
+                productData.id
+                    ? await tx.productImage.findMany({
+                        where: {productId: productData.id},
+                        select: {url: true},
+                    })
+                    : [];
+
+            const existingUrls = new Set(existingImages.map((img) => img.url));
+            // 1️⃣ Detectar nuevas imágenes (no están en la DB)
+            const imagesToAdd = newImages.filter((url) => !existingUrls.has(url));
+            // 2️⃣ Detectar imágenes eliminadas (estaban en DB pero no en el form)
+            const imagesToDelete = existingImages.filter(
+                (img) => !newImages.includes(img.url)
+            );
+            // 3️⃣ Borrar solo las que se eliminaron
+            if (imagesToDelete.length > 0) {
+                await tx.productImage.deleteMany({
+                    where: {url: {in: imagesToDelete.map((i) => i.url)}},
+                });
+            }
+            // 4️⃣ Crear solo las nuevas
+            if (imagesToAdd.length > 0) {
                 await tx.productImage.createMany({
-                    data: images.map((url) => ({
+                    data: imagesToAdd.map((url) => ({
                         url,
                         productId: product.id,
                     })),
                 });
             }
-
             return product;
         });
 
@@ -120,25 +139,10 @@ export async function createUpdateProduct(formData: FormData) {
         revalidatePath(`/admin/product/${result.slug}`);
         revalidatePath(`/product/${result.slug}`);
 
-        return { ok: true, product: result };
+        return {ok: true, product: result};
     } catch (error) {
         console.log(error);
-        return { ok: false, message: 'No se pudo crear o actualizar el producto' };
+        return {ok: false, message: 'No se pudo crear o actualizar el producto'};
     }
 }
 
-async function uploadImages(images: File[]) {
-    try {
-        return await Promise.all(
-            images.map(async (file) => {
-                const buffer = await file.arrayBuffer();
-                const base64 = Buffer.from(buffer).toString('base64');
-                const res = await cloudinary.uploader.upload(`data:image/png;base64,${base64}`);
-                return res.secure_url;
-            })
-        );
-    } catch (error) {
-        console.log(error);
-        return [];
-    }
-}
