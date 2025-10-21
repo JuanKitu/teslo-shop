@@ -6,16 +6,17 @@ import {IoAlertCircle, IoAddCircleOutline, IoTrash} from "react-icons/io5";
 import {useRouter} from "next/navigation";
 import clsx from "clsx";
 
-import {createUpdateProduct, deleteProductImage} from "@/actions";
-import {FormInput, FormSelect, FormTextArea, ProductImage} from "@/components";
+import {createUpdateProduct} from "@/actions";
+import {FormInput, FormSelect, FormTextArea} from "@/components";
 import type {Category, Gender, Product, ProductVariant, ProductImage as ProductWithImage, Size} from "@/interfaces";
+import ImageUploader from "./ImageUploader";
 
 interface VariantInput {
     color: string;
     size: string;
     price: number;
     inStock: number;
-    images?: FileList;
+    images?: string[];
 }
 
 interface FormInputs {
@@ -26,7 +27,7 @@ interface FormInputs {
     price: number;
     gender: "men" | "women" | "kid" | "unisex";
     categoryId: string;
-    images?: FileList;
+    images?: string[];
     variants: VariantInput[];
 }
 
@@ -51,7 +52,7 @@ export function ProductForm({product = {}, categories}: Props) {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const router = useRouter();
 
-    const {register, handleSubmit, control, formState: {errors, isValid}} = useForm<FormInputs>({
+    const {register, handleSubmit, setValue, control, formState: {errors, isValid}} = useForm<FormInputs>({
         mode: "onChange",
         defaultValues: {
             title: product.title ?? "",
@@ -162,34 +163,10 @@ export function ProductForm({product = {}, categories}: Props) {
             {/* Imágenes + Variantes */}
             <div className="flex flex-col gap-6">
                 {/* Imágenes */}
-                <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
-                    <h2 className="text-lg font-semibold mb-4">Imágenes</h2>
-                    <input
-                        type="file"
-                        {...register("images")}
-                        multiple
-                        accept="image/png, image/jpeg"
-                        className="p-2 border rounded-md bg-gray-50 w-full"
-                    />
-
-                    {product.ProductImage?.length ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
-                            {product.ProductImage.map(img => (
-                                <div key={img.id} className="relative">
-                                    <ProductImage src={img.url} alt={product.title ?? ""} width={300} height={300}
-                                                  className="rounded-md shadow-sm"/>
-                                    <button
-                                        type="button"
-                                        onClick={() => deleteProductImage(img.id, img.url)}
-                                        className="absolute bottom-0 left-0 right-0 bg-red-600 text-white text-sm py-1 rounded-b-md hover:bg-red-700"
-                                    >
-                                        Eliminar
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-                </div>
+                <ImageUploader
+                    initialImages={product.ProductImage}
+                    onChange={(urls) => setValue("images", urls)} // actualiza el valor en el form
+                />
 
                 {/* Variantes */}
                 <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
