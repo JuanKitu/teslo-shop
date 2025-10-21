@@ -1,4 +1,6 @@
 export {CartWarning} from './cart/CartWarning'
+export {ColorSelector} from './product/color-selector/ColorSelector';
+export {FadeImage} from './product/fade-image/FadeImage'
 export {Footer} from './ui/footer/Footer';
 export {FormInput} from './form/FormInput';
 export {FormSelect} from './form/FormSelect';
@@ -20,5 +22,3 @@ export {SizeSelector} from './product/size-selector/SizeSelector';
 export {StockLabel} from './product/stock-label/StockLabel';
 export {Title} from './ui/title/Title';
 export {TopMenu} from './ui/top-menu/TopMenu';
-export {ColorSelector} from './product/color-selector/ColorSelector';
-export {FadeImage} from './product/fade-image/FadeImage'
