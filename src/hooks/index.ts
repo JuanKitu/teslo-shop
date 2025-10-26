@@ -1,1 +1,1 @@
-export {useCartStockValidation} from './cart/useCartStockValidation';
+export { useCartStockValidation } from './cart/useCartStockValidation';

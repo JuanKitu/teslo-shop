@@ -1,19 +1,17 @@
-import {StateCreator, create} from "zustand";
+import { StateCreator, create } from 'zustand';
 
 interface UiState {
-    isSideMenuOpen: boolean;
+  isSideMenuOpen: boolean;
 }
 interface Actions {
-    openSideMenu: () => void;
-    closeSideMenu: () => void;
+  openSideMenu: () => void;
+  closeSideMenu: () => void;
 }
 type UiStore = UiState & Actions;
 
-const storeAPI:StateCreator<UiStore> = (set) => ({
-    isSideMenuOpen: false,
-    openSideMenu: () => set({isSideMenuOpen: true}),
-    closeSideMenu: () => set({isSideMenuOpen: false}),
+const storeAPI: StateCreator<UiStore> = (set) => ({
+  isSideMenuOpen: false,
+  openSideMenu: () => set({ isSideMenuOpen: true }),
+  closeSideMenu: () => set({ isSideMenuOpen: false }),
 });
-export const useUiStore = create<UiStore>()(
-    storeAPI,
-)
+export const useUiStore = create<UiStore>()(storeAPI);

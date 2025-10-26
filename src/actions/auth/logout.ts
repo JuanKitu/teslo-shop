@@ -1,7 +1,7 @@
 'use server';
 
-import {signOut} from "@/auth.config";
+import { signOut } from '@/auth.config';
 
 export async function logout() {
-    await signOut({ redirect: false });
+  await signOut({ redirect: false });
 }

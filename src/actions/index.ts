@@ -5,7 +5,7 @@ export * from './auth/login';
 export * from './auth/logout';
 export * from './auth/registerUser';
 export * from './cart/add-to-cart';
-export * from './cart/validateCartStock'
+export * from './cart/validateCartStock';
 export * from './category/get-categories';
 export * from './country/get-countries';
 export * from './order/get-order-by-id';

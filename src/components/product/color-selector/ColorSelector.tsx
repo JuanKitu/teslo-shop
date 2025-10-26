@@ -1,34 +1,40 @@
 'use client';
 import React from 'react';
-import clsx from 'clsx';
+import { ProductVariant } from '@/interfaces';
+import { useProductSelectionStore } from '@/store';
 
 interface Props {
-    selectedColor?: string;
-    availableColors: string[];
-    onColorChanged: (color: string) => void;
+  variants: ProductVariant[];
 }
 
-export function ColorSelector({ selectedColor, availableColors, onColorChanged }: Props) {
-    return (
-        <div className="my-5">
-            <h3 className="font-bold mb-2">Colores disponibles</h3>
-            <div className="flex">
-                {availableColors.map((color) => (
-                    <button
-                        key={color}
-                        onClick={() => onColorChanged(color)}
-                        className={clsx(
-                            "w-8 h-8 rounded-full mr-2 border-2",
-                            {
-                                "border-black": selectedColor === color,
-                                "border-gray-300": selectedColor !== color,
-                                "bg-[color]": true, // usar tu color como background
-                            }
-                        )}
-                        style={{ backgroundColor: color }}
-                    />
-                ))}
-            </div>
-        </div>
-    );
+export function ColorSelector({ variants }: Props) {
+  const selectedVariant = useProductSelectionStore((state) => state.selectedVariant);
+  const setVariant = useProductSelectionStore((state) => state.setVariant);
+  const colors = Array.from(new Set(variants.map((v) => v.color))).filter(Boolean);
+  const selectColor = (color: string) => {
+    const variant = selectedVariant?.size
+      ? variants.find((variant) => variant.color === color && variant.size === selectedVariant.size)
+      : undefined;
+    setVariant(variant ?? { color, size: 'GENERIC', stock: 0, images: [] });
+  };
+  return (
+    <div className="my-3">
+      <h3 className="font-bold mb-2">Colores disponibles</h3>
+      <div className="flex flex-wrap gap-2">
+        {colors.map((c) => (
+          <button
+            key={c}
+            onClick={() => selectColor(c)}
+            className={`px-3 py-1 rounded border transition-colors ${
+              selectedVariant?.color === c
+                ? 'border-black font-semibold'
+                : 'border-gray-300 hover:border-black'
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
