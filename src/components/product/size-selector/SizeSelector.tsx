@@ -14,9 +14,11 @@ export function SizeSelector({ variants }: Props) {
   const [hoveredSize, setHoveredSize] = useState<string | null>(null);
   // Filtrar variantes por color seleccionado
   const selectedColor = selectedVariant?.color;
-  const filteredVariants = selectedColor ? variants.filter((v) => v.color === selectedColor) : [];
+  const filteredVariants = selectedColor
+    ? variants.filter((variant) => variant.color === selectedColor)
+    : [];
 
-  const availableSizes = filteredVariants.filter((v) => v.stock > 0).map((v) => v.size);
+  const availableSizes = filteredVariants.filter((variant) => variant.stock > 0).map((v) => v.size);
   const displaySize =
     hoveredSize ||
     (selectedVariant?.size === 'GENERIC' ? 'Elegí' : selectedVariant?.size || 'Elegí');
@@ -28,7 +30,7 @@ export function SizeSelector({ variants }: Props) {
       <div className="flex flex-wrap gap-2">
         {availableSizes.length > 0 ? (
           availableSizes.map((size) => {
-            const variant = filteredVariants.find((v) => v.size === size)!;
+            const variant = filteredVariants.find((variant) => variant.size === size)!;
             return (
               <button
                 key={size}
