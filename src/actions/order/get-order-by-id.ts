@@ -9,7 +9,6 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
   if (!session?.user) {
     return { ok: false, message: 'Debe de estar autenticado' };
   }
-
   try {
     const order = await prisma.order.findUnique({
       where: { id },
@@ -43,7 +42,7 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
       OrderItem: order.OrderItem.map((item) => {
         // Buscar variante (si la orden tiene color/size)
         const variant = item.product.variants.find(
-          (v) => v.size === item.size && (v.color === (item as any).color || !v.color)
+          (v) => v.size === item.size && (v.color === item.color || !v.color)
         );
 
         const image =
@@ -57,7 +56,7 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
             title: item.product.title,
             slug: item.product.slug,
             image,
-            color: (item as any).color || variant?.color,
+            color: item.color || variant?.color,
             size: item.size || variant?.size,
           },
         };
