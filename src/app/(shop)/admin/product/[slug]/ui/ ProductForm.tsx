@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
+import { useForm, SubmitHandler, useFieldArray, useWatch } from 'react-hook-form';
 import { IoAlertCircle, IoAddCircleOutline, IoTrash } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
 import { createUpdateProduct } from '@/actions';
-import { FormInput, FormSelect, FormTextArea } from '@/components';
+import { FormInput, FormSelect, FormTextArea, VariantImagePicker } from '@/components';
 import type {
   Category,
   Gender,
@@ -63,7 +63,6 @@ export function ProductForm({ product = {}, categories }: Props) {
     register,
     handleSubmit,
     setValue,
-    //getValues,
     control,
     formState: { errors, isValid },
   } = useForm<FormInputs>({
@@ -77,11 +76,12 @@ export function ProductForm({ product = {}, categories }: Props) {
       categoryId: product?.categoryId ?? '',
       price: product?.price,
       images: undefined,
-      variants: (product.variants ?? []).map((v) => ({
-        color: 'color' in v ? (v.color ?? '') : '',
-        size: 'size' in v ? ((v.size as Size) ?? 'GENERIC') : 'GENERIC',
-        price: Number('price' in v ? (v.price ?? 0) : 0),
-        inStock: Number('stock' in v ? (v.stock ?? 0) : 0),
+      variants: (product.variants ?? []).map((variant) => ({
+        color: 'color' in variant ? (variant.color ?? '') : '',
+        size: 'size' in variant ? ((variant.size as Size) ?? 'GENERIC') : 'GENERIC',
+        price: Number('price' in variant ? (variant.price ?? 0) : 0),
+        inStock: Number('stock' in variant ? (variant.stock ?? 0) : 0),
+        images: variant.images ?? [],
       })),
     },
   });
@@ -91,7 +91,13 @@ export function ProductForm({ product = {}, categories }: Props) {
     control,
     name: 'variants',
   });
-
+  const watchedImages = useWatch({ control, name: 'images' });
+  const combinedImages = Array.from(
+    new Set([
+      ...(product.ProductImage?.map((img) => img.url) ?? []),
+      ...(Array.isArray(watchedImages) ? watchedImages : []),
+    ])
+  );
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setErrorMessage(null);
     const formData = new FormData();
@@ -277,6 +283,14 @@ export function ProductForm({ product = {}, categories }: Props) {
                 >
                   <IoTrash className="w-5 h-5" />
                 </button>
+                {/* componente de imagenes variaantes */}
+                <VariantImagePicker<FormInputs>
+                  control={control}
+                  name={`variants.${i}.images`}
+                  images={combinedImages}
+                  multiple
+                />
+                {/* fin de componente de imagenes variaantes */}
               </div>
             ))}
           </div>

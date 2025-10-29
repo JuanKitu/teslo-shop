@@ -1,5 +1,4 @@
 'use server';
-//TODO: Revisar seguro necesita rework
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Gender, Product, Size } from '@prisma/client';
@@ -24,6 +23,7 @@ const productSchema = z.object({
         color: z.string().optional(),
         price: z.coerce.number().min(0).optional(),
         inStock: z.coerce.number().min(0),
+        images: z.array(z.string()).optional(),
       })
     )
     .min(1),
@@ -33,7 +33,7 @@ export async function createUpdateProduct(formData: FormData) {
   const data = Object.fromEntries(formData);
   const productParsed = productSchema.safeParse({
     ...data,
-    variants: JSON.parse((data.variants as string) || '[]'), // variantes enviadas como JSON
+    variants: JSON.parse((data.variants as string) || '[]'),
   });
 
   if (!productParsed.success) {
@@ -49,8 +49,8 @@ export async function createUpdateProduct(formData: FormData) {
       let product: Product;
       const tagsArray = productData.tags.split(',').map((t) => t.trim().toLowerCase());
 
+      // --- Crear o actualizar producto ---
       if (productData.id) {
-        // Actualizar producto
         product = await tx.product.update({
           where: { id: productData.id },
           data: {
@@ -63,13 +63,7 @@ export async function createUpdateProduct(formData: FormData) {
             tags: { set: tagsArray },
           },
         });
-
-        // Reemplazar variantes
-        await tx.productVariant.deleteMany({
-          where: { productId: product.id },
-        });
       } else {
-        // Crear producto
         product = await tx.product.create({
           data: {
             title: productData.title,
@@ -83,37 +77,106 @@ export async function createUpdateProduct(formData: FormData) {
         });
       }
 
-      // Crear variantes
-      const variantsData = productData.variants.map((v) => ({
-        ...v,
-        productId: product.id,
-        sku: `${product.id.slice(0, 6)}-${v.size}-${Math.random().toString(36).slice(2, 8)}`,
-      }));
+      // --- Variantes ---
+      const existingVariants = await tx.productVariant.findMany({
+        where: { productId: product.id },
+        include: { images: true },
+      });
 
-      await tx.productVariant.createMany({ data: variantsData });
+      const incomingVariants = productData.variants;
 
-      // cargar images
+      // 1️⃣ Crear o actualizar variantes
+      for (const variant of incomingVariants) {
+        const existing = existingVariants.find(
+          (ev) => ev.size === variant.size && ev.color === variant.color
+        );
+
+        if (existing) {
+          // Actualizar variante existente
+          await tx.productVariant.update({
+            where: { id: existing.id },
+            data: {
+              price: variant.price ?? productData.price,
+              inStock: variant.inStock,
+            },
+          });
+
+          // 🔹 Nuevas imágenes
+          if (variant.images?.length) {
+            const existingUrls = new Set(existing.images.map((i) => i.url));
+            const newImages = variant.images.filter((url) => !existingUrls.has(url));
+
+            if (newImages.length > 0) {
+              await tx.productImage.createMany({
+                data: newImages.map((url) => ({
+                  url,
+                  variantId: existing.id,
+                })),
+              });
+            }
+          }
+
+          // 🔹 No borramos imágenes acá — eso se hace manualmente desde el front
+        } else {
+          // Crear nueva variante
+          const created = await tx.productVariant.create({
+            data: {
+              size: variant.size,
+              color: variant.color,
+              price: variant.price ?? productData.price,
+              inStock: variant.inStock,
+              productId: product.id,
+              sku: `${product.id.slice(0, 6)}-${variant.size}-${Math.random()
+                .toString(36)
+                .slice(2, 8)}`,
+            },
+          });
+
+          if (variant.images?.length) {
+            await tx.productImage.createMany({
+              data: variant.images.map((url) => ({
+                url,
+                variantId: created.id,
+              })),
+            });
+          }
+        }
+      }
+
+      // 2️⃣ Eliminar variantes que ya no están
+      const variantsToDelete = existingVariants.filter(
+        (ev) => !incomingVariants.some((v) => v.size === ev.size && v.color === ev.color)
+      );
+
+      if (variantsToDelete.length > 0) {
+        await tx.productImage.deleteMany({
+          where: { variantId: { in: variantsToDelete.map((v) => v.id) } },
+        });
+        await tx.productVariant.deleteMany({
+          where: { id: { in: variantsToDelete.map((v) => v.id) } },
+        });
+      }
+
+      // --- Imágenes del producto (globales) ---
       const newImages = formData.getAll('images') as string[];
-      // Buscar las imágenes actuales (solo si es edición)
+
       const existingImages = productData.id
         ? await tx.productImage.findMany({
-            where: { productId: productData.id },
+            where: { productId: product.id, variantId: null },
             select: { url: true },
           })
         : [];
 
       const existingUrls = new Set(existingImages.map((img) => img.url));
-      // 1️⃣ Detectar nuevas imágenes (no están en la DB)
       const imagesToAdd = newImages.filter((url) => !existingUrls.has(url));
-      // 2️⃣ Detectar imágenes eliminadas (estaban en DB pero no en el form)
       const imagesToDelete = existingImages.filter((img) => !newImages.includes(img.url));
-      // 3️⃣ Borrar solo las que se eliminaron
+
       if (imagesToDelete.length > 0) {
         await tx.productImage.deleteMany({
           where: { url: { in: imagesToDelete.map((i) => i.url) } },
         });
       }
-      // 4️⃣ Crear solo las nuevas
+
       if (imagesToAdd.length > 0) {
         await tx.productImage.createMany({
           data: imagesToAdd.map((url) => ({
@@ -122,6 +185,7 @@ export async function createUpdateProduct(formData: FormData) {
           })),
         });
       }
+
       return product;
     });
 
