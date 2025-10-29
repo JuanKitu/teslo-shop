@@ -30,8 +30,6 @@ export default function ImageUploader({ initialImages = [], onChange }: Props) {
   }
 
   async function handleDelete(url: string) {
-    console.log('Eliminando imagen', url);
-
     // actualizar el estado local inmediatamente
     setImages((prev) => prev.filter((i) => i !== url));
     onChange(images.filter((i) => i !== url));

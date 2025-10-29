@@ -14,7 +14,6 @@ export function ColorSelector({ variants }: Props) {
 
   //Estado local para mostrar el color "hover"
   const [hoveredColor, setHoveredColor] = useState<string | null>(null);
-
   //Agrupar por color (sin duplicados)
   const variantList = Array.from(
     new Map(

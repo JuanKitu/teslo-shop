@@ -63,6 +63,7 @@ export function ProductForm({ product = {}, categories }: Props) {
     register,
     handleSubmit,
     setValue,
+    //getValues,
     control,
     formState: { errors, isValid },
   } = useForm<FormInputs>({
