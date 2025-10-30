@@ -75,7 +75,7 @@ export function ProductForm({ product = {}, categories }: Props) {
       gender: (product.gender as FormInputs['gender']) ?? 'unisex',
       categoryId: product?.categoryId ?? '',
       price: product?.price,
-      images: undefined,
+      images: product.ProductImage?.map((image) => image.url) ?? [],
       variants: (product.variants ?? []).map((variant) => ({
         color: 'color' in variant ? (variant.color ?? '') : '',
         size: 'size' in variant ? ((variant.size as Size) ?? 'GENERIC') : 'GENERIC',
