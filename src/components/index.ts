@@ -1,6 +1,7 @@
 export { CartWarning } from './cart/CartWarning';
 export { ColorSelector } from './product/color-selector/ColorSelector';
 export { FadeImage } from './product/fade-image/FadeImage';
+export { FavoriteButton } from './product/favorite-button/FavoriteButton';
 export { Footer } from './ui/footer/Footer';
 export { FormInput } from './form/FormInput';
 export { FormSelect } from './form/FormSelect';
