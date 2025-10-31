@@ -5,6 +5,7 @@ export { Footer } from './ui/footer/Footer';
 export { FormInput } from './form/FormInput';
 export { FormSelect } from './form/FormSelect';
 export { FormTextArea } from './form/FormTextArea';
+export { InfiniteProductGrid } from './products/Infinite-product-grid/InfiniteProductGrid';
 export { OrderTemplate } from './orders/OrderTemplate';
 export { PageNotFound } from './ui/not-found/PageNotFound';
 export { Pagination } from './ui/pagination/Pagination';

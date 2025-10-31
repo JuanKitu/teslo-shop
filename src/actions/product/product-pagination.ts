@@ -57,11 +57,11 @@ export const getPaginatedProductsWithImages = async ({
         slug: product.slug,
         tags: product.tags,
         gender: product.gender,
-        images: Array.from(new Set(allImages)), // 🔹 Evita duplicados
+        images: Array.from(new Set(allImages)),
         variants: product.variants.map((v) => ({
           color: v.color ?? '',
           size: v.size ?? 'GENERIC',
-          stock: v.inStock ?? 0, // ✅ nuevo campo directo
+          stock: v.inStock ?? 0,
           images: v.images.map((img) => img.url),
         })),
       };

@@ -7,10 +7,10 @@ export interface Product {
   slug: string;
   tags: string[];
   title: string;
-  categoryId: string;
+  categoryId?: string;
   variants: ProductVariant[];
   gender: Category;
-  ProductImage: ProductImage[];
+  ProductImage?: ProductImage[];
 }
 export interface ProductVariant {
   color: string;
