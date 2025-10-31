@@ -10,15 +10,19 @@ import 'swiper/css/thumbs';
 import './slideshow.css';
 import { Autoplay, FreeMode, Navigation, Thumbs } from 'swiper/modules';
 import { ProductImage } from '@/components';
+
 interface Props {
   images: string[];
   title: string;
   className?: string;
 }
+
 export function ProductSlideshow({ images, title, className }: Props) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperObject>();
+
   return (
-    <div className={`${className}`}>
+    <div className={className}>
+      {/* 🔹 Slider principal */}
       <Swiper
         style={
           {
@@ -27,7 +31,7 @@ export function ProductSlideshow({ images, title, className }: Props) {
           } as React.CSSProperties
         }
         spaceBetween={10}
-        navigation={true}
+        navigation
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
@@ -38,34 +42,34 @@ export function ProductSlideshow({ images, title, className }: Props) {
       >
         {images.map((image) => (
           <SwiperSlide key={image}>
-            <ProductImage
-              width={1024}
-              height={800}
-              alt={title}
-              className="rounded-lg object-cover"
-              src={image}
-            />
+            <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg">
+              <ProductImage src={image} alt={title} fill className="object-cover" />
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
+
+      {/* 🔹 Thumbnails */}
       <Swiper
         onSwiper={setThumbsSwiper}
         spaceBetween={10}
         slidesPerView={4}
-        freeMode={true}
-        watchSlidesProgress={true}
+        freeMode
+        watchSlidesProgress
         modules={[FreeMode, Navigation, Thumbs]}
-        className="mySwiper"
+        className="mySwiper mt-4"
       >
         {images.map((image) => (
           <SwiperSlide key={image}>
-            <ProductImage
-              width={300}
-              height={300}
-              alt={title}
-              className="rounded-lg object-cover"
-              src={image}
-            />
+            {/* 🧱 Mantiene todas las miniaturas cuadradas */}
+            <div className="relative w-full aspect-square overflow-hidden rounded-lg cursor-pointer">
+              <ProductImage
+                src={image}
+                alt={title}
+                fill
+                className="object-cover transition-transform duration-300 hover:scale-105"
+              />
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
