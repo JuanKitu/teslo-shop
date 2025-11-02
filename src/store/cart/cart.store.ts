@@ -36,7 +36,7 @@ const storeAPI: StateCreator<CartStore> = (set, get) => ({
   getSummaryInformation: () => {
     const { cart } = get();
     const subtotal = cart.reduce((total, item) => total + item.quantity * item.price, 0);
-    const tax = subtotal * 0.16;
+    const tax = subtotal * 0.15;
     const total = subtotal + tax;
     const itemsInCart = cart.reduce((total, item) => total + item.quantity, 0);
     return {

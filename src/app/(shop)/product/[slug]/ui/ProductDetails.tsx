@@ -12,6 +12,7 @@ interface Props {
 
 export function ProductDetails({ product, slug }: Props) {
   const resetSelection = useProductSelectionStore((state) => state.reset);
+  const selectedVariant = useProductSelectionStore((state) => state.selectedVariant);
 
   // Limpia selección al montar/desmontar
   useEffect(() => {
@@ -22,7 +23,9 @@ export function ProductDetails({ product, slug }: Props) {
     <div className="col-span-1 px-5">
       <h1 className={`${titleFont.className} antialiased text-xl font-bold`}>{product.title}</h1>
 
-      <p className="text-lg mb-5">${product.price}</p>
+      <p className="text-lg mb-5">
+        ${selectedVariant?.price ? selectedVariant?.price : product.price}
+      </p>
 
       <AddToCart product={product} />
 

@@ -45,7 +45,7 @@ export function AddToCart({ product, onStockError }: Props) {
         slug: product.slug,
         image: selectedVariant.images[0] ?? product.images[0],
         title: product.title,
-        price: product.price,
+        price: selectedVariant?.price ? selectedVariant.price : product.price,
         inStock: selectedVariant.stock,
         size: selectedVariant.size,
         color: selectedVariant.color,

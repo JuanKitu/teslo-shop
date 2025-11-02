@@ -81,7 +81,8 @@ export async function placeOrder(
         const variant = updatedVariants.find(
           (v) => v.productId === i.productId && v.size === i.size && v.color === i.color
         )!;
-        return sum + (variant.price ?? variant.product.price) * i.quantity;
+        const price = variant.price ? variant.price : variant.product.price;
+        return sum + price * i.quantity;
       }, 0);
       const tax = subTotal * 0.15;
       const total = subTotal + tax;
@@ -105,7 +106,7 @@ export async function placeOrder(
                   quantity: i.quantity,
                   size: i.size,
                   color: i.color,
-                  price: variant.price ?? variant.product.price,
+                  price: variant.price ? variant.price : variant.product.price,
                 };
               }),
             },
