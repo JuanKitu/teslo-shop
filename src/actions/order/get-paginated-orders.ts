@@ -1,11 +1,12 @@
 'use server';
-import { auth } from '@/auth.config';
 import prisma from '@/lib/prisma';
+import { getServerSession, Session } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function getPaginatedOrders() {
-  const session = await auth();
+  const session: Session | null = await getServerSession(authOptions);
 
-  if (session?.user.role !== 'admin') {
+  if (session?.user?.role !== 'admin') {
     return {
       ok: false,
       message: 'Debe de estar autenticado',

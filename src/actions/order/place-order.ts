@@ -2,8 +2,9 @@
 
 import { Address, Size } from '@/interfaces';
 import prisma from '@/lib/prisma';
-import { auth } from '@/auth.config';
 import type { Order, OrderItem, ProductVariant, OrderAddress } from '@prisma/client';
+import { getServerSession, Session } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export interface ProductToOrder {
   productId: string;
@@ -30,7 +31,7 @@ export async function placeOrder(
   items: ProductToOrder[],
   address: Address
 ): Promise<PlaceOrderResult> {
-  const session = await auth();
+  const session: Session | null = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
   if (!userId) return { ok: false, message: 'No hay sesión de usuario' };

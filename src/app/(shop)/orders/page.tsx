@@ -5,7 +5,7 @@ export const revalidate = 0;
 export default async function OrdersPage() {
   const { ok, orders = [] } = await getOrdersByUser();
   if (!ok) {
-    redirect('/auth/login');
+    redirect('/api/auth/signin');
   }
   return <OrderTemplate title="Mis ordenes" orders={orders} />;
 }

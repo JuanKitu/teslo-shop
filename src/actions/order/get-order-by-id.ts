@@ -1,11 +1,12 @@
 'use server';
 
-import { auth } from '@/auth.config';
 import prisma from '@/lib/prisma';
 import { GetOrderResult, OrderWithDetails } from '@/interfaces';
+import { getServerSession, Session } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function getOrderById(id: string): Promise<GetOrderResult> {
-  const session = await auth();
+  const session: Session | null = await getServerSession(authOptions);
   if (!session?.user) {
     return { ok: false, message: 'Debe de estar autenticado' };
   }

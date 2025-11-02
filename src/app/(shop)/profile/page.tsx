@@ -1,10 +1,11 @@
 import React from 'react';
 import { Title } from '@/components';
-import { auth } from '@/auth.config';
 import { redirect } from 'next/navigation';
+import { getServerSession, Session } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export default async function ProfilePage() {
-  const session = await auth();
+  const session: Session | null = await getServerSession(authOptions);
   if (!session?.user) {
     redirect('/');
   }

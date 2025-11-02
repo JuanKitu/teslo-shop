@@ -8,7 +8,7 @@ export default function HotSessionWatcher() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.replace('/auth/login');
+    if (status === 'unauthenticated') router.replace('/api/auth/signin');
   }, [status, router]);
 
   return null; // solo observa, no renderiza nada

@@ -1,11 +1,12 @@
 'use server';
-import { auth } from '@/auth.config';
+import { getServerSession, Session } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 
 export async function getPaginatedUsers() {
-  const session = await auth();
+  const session: Session | null = await getServerSession(authOptions);
 
-  if (session?.user.role !== 'admin') {
+  if (session?.user?.role !== 'admin') {
     return {
       ok: false,
       message: 'Debe de ser un usuario administrador',
