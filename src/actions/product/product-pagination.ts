@@ -62,6 +62,7 @@ export const getPaginatedProductsWithImages = async ({
           color: v.color ?? '',
           size: v.size ?? 'GENERIC',
           stock: v.inStock ?? 0,
+          price: v.price,
           images: v.images.map((img) => img.url),
         })),
       };

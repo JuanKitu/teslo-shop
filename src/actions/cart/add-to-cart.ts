@@ -46,6 +46,7 @@ export async function addToCartWithStockValidation({
       color: variantDb.color ?? '',
       size: variantDb.size as Size,
       stock: variantDb.inStock,
+      price: variantDb.price,
       images: variantDb.images.map((img) => img.url),
     };
 

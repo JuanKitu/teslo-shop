@@ -16,7 +16,7 @@ export interface ProductVariant {
   color: string;
   size: Size;
   stock: number;
-  price?: number;
+  price: number | null;
   images: string[];
 }
 export interface ProductImage {

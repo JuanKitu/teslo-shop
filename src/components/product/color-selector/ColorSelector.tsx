@@ -25,7 +25,7 @@ export function ColorSelector({ variants }: Props) {
     const variant = selectedVariant?.size
       ? variants.find((variant) => variant.color === color && variant.size === selectedVariant.size)
       : undefined;
-    setVariant(variant ?? { color, size: 'GENERIC', stock: 0, images: [] });
+    setVariant(variant ?? { color, size: 'GENERIC', stock: 0, images: [], price: null });
   };
   //Determinar qué texto mostrar en el label
   const displayColor = hoveredColor || selectedVariant?.color || 'Elegí';
