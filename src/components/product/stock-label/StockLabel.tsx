@@ -1,40 +1,18 @@
 'use client';
-import React, {useEffect, useState} from 'react'
-import {titleFont} from "@/app/config/fonts";
-import {getStockBySlug} from "@/actions";
+import React from 'react';
+import { titleFont } from '@/app/config/fonts';
+import { useProductSelectionStore } from '@/store';
 
-interface Props {
-    slug: string;
-}
+export function StockLabel() {
+  const { selectedVariant } = useProductSelectionStore();
 
-export function StockLabel({slug}: Props) {
-    const [stock, setStock] = useState(0);
-    const [isLoading, setIsLoading] = useState(true)
-    useEffect(() => {
-        getStock().then();
-    })
-    const getStock = async () => {
-        const inStock = await getStockBySlug(slug);
-        setStock(inStock);
-        setIsLoading(false);
-    }
+  const stock = selectedVariant?.stock ?? 0;
 
-    return (
-        <>
-            {
-                isLoading ?
-                    (
-                        <h1 className={`${titleFont.className} antialiased text-md font-bold bg-gray-200 animate-pulse`}>
-                            &nbsp;
-                        </h1>
-                    ) :
-                    (
-                        <h1 className={`${titleFont.className} antialiased text-md font-bold`}>
-                            Stock: {stock}
-                        </h1>
-                    )
-            }
-        </>
-
-    )
+  return (
+    <div className="h-6 flex items-center">
+      <h1 className={`${titleFont.className} antialiased text-md font-bold`}>
+        {stock > 0 ? `Stock: ${stock}` : 'Sin stock'}
+      </h1>
+    </div>
+  );
 }

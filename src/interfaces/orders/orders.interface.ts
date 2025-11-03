@@ -1,25 +1,27 @@
-import type { Order, OrderAddress } from "@prisma/client";
+import type { Order, OrderAddress } from '@prisma/client';
 
 export interface OrderProduct {
-    title: string;
-    slug: string;
-    ProductImage: { url: string }[];
+  id: string;
+  title: string;
+  slug: string;
+  image: string; // imagen principal o de la variante
+  color?: string;
+  size?: string;
 }
 
 export interface OrderItemWithProduct {
-    price: number;
-    quantity: number;
-    size: string;
-    product: OrderProduct;
+  price: number;
+  quantity: number;
+  product: OrderProduct;
 }
 
 export interface OrderWithDetails extends Order {
-    OrderAddress: OrderAddress | null; // reflejando la posibilidad de null
-    OrderItem: OrderItemWithProduct[];
+  OrderAddress: OrderAddress | null;
+  OrderItem: OrderItemWithProduct[];
 }
 
 export interface GetOrderResult {
-    ok: boolean;
-    message: string;
-    order: OrderWithDetails | undefined;
+  ok: boolean;
+  message: string;
+  order?: OrderWithDetails;
 }

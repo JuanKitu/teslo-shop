@@ -15,6 +15,7 @@ enum Size {
   XL
   XXL
   XXXL
+  GENERIC
 }
 
 enum Gender {
@@ -39,30 +40,84 @@ model Product {
   id          String   @id @default(uuid())
   title       String
   description String
-  inStock     Int
-  price       Float    @default(0)
-  sizes       Size[]   @default([])
   slug        String   @unique
-  tags        String[] @default([])
   gender      Gender
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  price       Float    @default(0)
+  tags        String[] @default([])
 
-  // Relaciones
+  variants  ProductVariant[]
+  images    ProductImage[] // imágenes generales del producto
+  OrderItem OrderItem[]
+  Favorite  Favorite[]
+}
 
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
+model Favorite {
+  id        String @id @default(uuid())
+  userId    String
+  productId String
 
-  ProductImage ProductImage[]
-  OrderItem    OrderItem[]
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
-  @@index([gender])
+  @@unique([userId, productId]) // evita duplicados
+}
+
+model ProductVariant {
+  id        String  @id @default(uuid())
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  size    Size    @default(GENERIC)
+  color   String  @default("GENERIC")
+  inStock Int     @default(0)
+  price   Float?
+  sku     String? @unique
+
+  images ProductImage[] // imágenes específicas (usa la misma tabla)
 }
 
 model ProductImage {
   id  Int    @id @default(autoincrement())
   url String
 
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
+  productId String?
+  variantId String?
+
+  product Product?        @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+}
+
+///auth.js
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
 
 model User {
@@ -70,14 +125,17 @@ model User {
   name          String
   email         String    @unique
   emailVerified DateTime?
-  password      String
+  password      String?
   role          Role      @default(user)
   image         String?
 
   address UserAddress?
 
   // Relaciones
-  Order Order[]
+  Order    Order[]
+  Favorite Favorite[]
+  Account  Account[]
+  Session  Session[]
 }
 
 model Country {
@@ -133,11 +191,11 @@ model OrderItem {
   id       String @id @default(uuid())
   quantity Int
   price    Float
-  size     Size
-
+  size     Size   @default(GENERIC)
+  color    String @default("GENERIC")
   // Relaciones
-  order   Order  @relation(fields: [orderId], references: [id])
-  orderId String
+  order    Order  @relation(fields: [orderId], references: [id])
+  orderId  String
 
   product   Product @relation(fields: [productId], references: [id])
   productId String
@@ -159,4 +217,13 @@ model OrderAddress {
 
   Order   Order  @relation(fields: [orderId], references: [id])
   orderId String @unique
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }

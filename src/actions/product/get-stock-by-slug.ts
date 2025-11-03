@@ -1,20 +1,26 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-// import { sleep } from '@/utils';
 
+export async function getStockBySlug(slug: string): Promise<number> {
+  try {
+    // Buscar el producto con sus variantes
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: {
+        variants: {
+          select: { inStock: true },
+        },
+      },
+    });
 
-export async function getStockBySlug( slug: string ): Promise<number>{
-    try {
-        const stock = await prisma.product.findFirst({
-            where: { slug },
-            select: { inStock: true }
-        });
-        return stock?.inStock ?? 0;
-    } catch (error) {
-        void error;
-        return 0;
-    }
+    // Si no existe, devolvemos 0
+    if (!product) return 0;
 
-
+    // Sumar el stock total de las variantes
+    return product.variants.reduce((sum, variant) => sum + (variant.inStock || 0), 0);
+  } catch (error) {
+    console.error('[getStockBySlug]', error);
+    return 0;
+  }
 }

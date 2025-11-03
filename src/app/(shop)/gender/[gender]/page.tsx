@@ -1,39 +1,37 @@
-import React from 'react'
-import {Pagination, ProductGrid, Title} from "@/components";
-import {labelCategory} from "@/interfaces";
-import {Gender} from "@prisma/client";
-import {getPaginatedProductsWithImages} from "@/actions";
-import {notFound} from "next/navigation";
-export const revalidate = 86400; // un dia
+import { Title } from '@/components';
+import { labelCategory } from '@/interfaces';
+import { Gender } from '@prisma/client';
+import { getPaginatedProductsWithImages } from '@/actions';
+import { notFound } from 'next/navigation';
+import { InfiniteProductGrid } from '@/components';
+
+export const revalidate = 86400; // un día
+
 interface Props {
-    params: Promise<{
-        gender: Gender
-    }>
-    searchParams: Promise<{
-        page: string
-    }>
+  params: Promise<{ gender: Gender }>;
 }
-export default async function GenderPage({params, searchParams}: Props) {
-    const {gender} = await params;
-    if(Gender[gender] === undefined){
-        notFound();
-    }
-    const findPage = await searchParams;
-    const page = findPage.page ? Number(findPage.page) : 1;
-    const {products, totalPages} = await getPaginatedProductsWithImages({
-        page,
-        take: 12,
-        gender,
-    });
-    return (
-        <>
-            <Title
-                title={`Articulos de ${labelCategory[gender]}`}
-                subtitle={`Todos los productos`}
-                className="mb-2"
-            />
-            <ProductGrid products={products} />
-            <Pagination totalPages={totalPages} />
-        </>
-    )
+
+export default async function GenderPage({ params }: Props) {
+  const { gender } = await params;
+
+  if (!Object.values(Gender).includes(gender)) {
+    notFound();
+  }
+
+  const { products, totalPages } = await getPaginatedProductsWithImages({
+    page: 1,
+    take: 12,
+    gender,
+  });
+
+  return (
+    <>
+      <Title
+        title={`Artículos de ${labelCategory[gender]}`}
+        subtitle="Todos los productos"
+        className="mb-2"
+      />
+      <InfiniteProductGrid initialProducts={products} totalPages={totalPages} gender={gender} />
+    </>
+  );
 }

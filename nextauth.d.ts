@@ -1,23 +1,29 @@
-export interface IUser {
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: Date | null;
-    role: string;
-    image?: string;
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+import { DefaultUser } from 'next-auth';
+
+interface IUser extends DefaultUser {
+  /**
+   * Roles del usuario
+   */
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: Date | null;
+  role: string;
+  image?: string;
+  /**
+   * Agregar cualquier otro campo que tu manejas
+   */
 }
 
-declare module "next-auth" {
-    interface Session {
-        user: IUser; // ✅ tu User, nada de AdapterUser
-    }
+declare module 'next-auth' {
+  interface User extends IUser {}
 
-    // ✅ esta línea es la que corta con AdapterUser
-    type User = IUser;
+  interface Session {
+    user?: User;
+  }
 }
 
-declare module "next-auth/jwt" {
-    interface JWT {
-        data?: IUser;
-    }
+declare module 'next-auth/jwt' {
+  interface JWT extends IUser {}
 }

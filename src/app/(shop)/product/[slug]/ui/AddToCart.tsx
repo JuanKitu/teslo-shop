@@ -1,60 +1,84 @@
 'use client';
-import React, {useState} from 'react'
-import {QuantitySelector, SizeSelector} from "@/components";
-import type {Product, Size} from "@/interfaces";
-import {useCartStore} from "@/store";
+import React, { useState } from 'react';
+import { SizeSelector, QuantitySelector, StockLabel, ColorSelector } from '@/components';
+import type { Product } from '@/interfaces';
+import { useCartStore, useProductSelectionStore } from '@/store';
+import { addToCartWithStockValidation } from '@/actions';
+
 interface Props {
-    product:Product;
+  product: Product;
+  onStockError?: () => void;
 }
-export function AddToCart({product}: Props) {
-    const [size, setSize] = useState<Size | undefined>();
-    const [quantity, setQuantity] = useState<number>(1);
-    const [posted, setPosted] = useState(false);
-    const addProductToCart = useCartStore(state => state.addProductToCart);
-    const addToCart = () => {
-        if(!size){
-            setPosted(true);
-            return;
-        }
-        addProductToCart({
-            id: product.id,
-            slug: product.slug,
-            image: product.images[0],
-            title: product.title,
-            price: product.price,
-            size,
-            quantity,
-        });
-        setPosted(false);
-        setQuantity(1);
-        setSize(undefined);
+
+export function AddToCart({ product, onStockError }: Props) {
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const addProductToCart = useCartStore((state) => state.addProductToCart);
+  const selectedVariant = useProductSelectionStore((state) => state.selectedVariant);
+  const quantity = useProductSelectionStore((state) => state.quantity);
+  const setVariant = useProductSelectionStore((state) => state.setVariant);
+  const setQuantity = useProductSelectionStore((state) => state.setQuantity);
+  const addToCart = async () => {
+    if (!selectedVariant) return setError('Debes seleccionar color y talla');
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await addToCartWithStockValidation({
+        slug: product.slug,
+        color: selectedVariant.color,
+        size: selectedVariant.size,
+        quantity,
+      });
+
+      if (!res.ok) {
+        setError(res.message);
+        if (res.variant) setVariant(res.variant);
+        onStockError?.();
+        return;
+      }
+
+      addProductToCart({
+        id: product.id,
+        slug: product.slug,
+        image: selectedVariant.images[0] ?? product.images[0],
+        title: product.title,
+        price: selectedVariant?.price ? selectedVariant.price : product.price,
+        inStock: selectedVariant.stock,
+        size: selectedVariant.size,
+        color: selectedVariant.color,
+        quantity,
+      });
+
+      setQuantity(1);
+    } catch {
+      setError('Error al agregar el producto al carrito');
+    } finally {
+      setLoading(false);
     }
-    return (
-        <>
-            {
-                posted && (
-                    <span className="text-red-500 mt-2 fade-in">*Debe de seleccionar una talla</span>
-                )
-            }
-            {/* Selector de tallas */}
-            <SizeSelector
-                availableSizes={product.sizes}
-                selectedSize={size}
-                onSizeChanged={setSize}
-            />
+  };
 
-            {/* Selector de cantidad */}
-            <QuantitySelector
-                quantity={quantity}
-                onQuantityChanged={setQuantity}
-            />
+  return (
+    <>
+      <ColorSelector variants={product.variants} />
+      <SizeSelector variants={product.variants} />
+      <QuantitySelector
+        quantity={quantity}
+        maxStock={selectedVariant?.stock ?? 0}
+        onQuantityChanged={setQuantity}
+      />
+      <StockLabel />
+      {error && <p className="text-red-500 my-2">{error}</p>}
 
-            {/* Button */}
-            <button
-                onClick={addToCart}
-                className="btn-primary my-5">
-                Agregar al carrito
-            </button>
-        </>
-    )
+      <button
+        className="btn-primary my-3 disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={addToCart}
+        disabled={loading || (selectedVariant?.stock ?? 0) === 0}
+      >
+        {loading ? 'Agregando...' : 'Agregar al carrito'}
+      </button>
+    </>
+  );
 }

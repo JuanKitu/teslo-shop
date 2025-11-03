@@ -1,264 +1,301 @@
-"use client";
+'use client';
 
-import type {Category, Gender, Product, ProductImage as ProductWithImage} from "@/interfaces";
-import {SubmitHandler, useForm} from "react-hook-form";
-import {FormInput, FormSelect, FormTextArea, ProductImage} from "@/components";
-import React, {useState} from "react";
-import clsx from "clsx";
-import {createUpdateProduct, deleteProductImage} from "@/actions";
-import {useRouter} from "next/navigation";
-import {IoAlertCircle} from "react-icons/io5";
+import React, { useState } from 'react';
+import { useForm, SubmitHandler, useFieldArray, useWatch } from 'react-hook-form';
+import { IoAlertCircle, IoAddCircleOutline, IoTrash } from 'react-icons/io5';
+import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
+
+import { createUpdateProduct } from '@/actions';
+import { FormInput, FormSelect, FormTextArea, VariantImagePicker } from '@/components';
+import type {
+  Category,
+  Gender,
+  Product,
+  ProductVariant,
+  ProductImage as ProductWithImage,
+  Size,
+} from '@/interfaces';
+import ImageUploader from './ImageUploader';
+
+interface VariantInput {
+  color: string;
+  size: string;
+  price: number;
+  inStock: number;
+  images?: string[];
+}
+
 interface FormInputs {
-    title: string;
-    slug: string;
-    description: string;
-    price: number;
-    inStock: number;
-    sizes: string[];
-    tags: string;
-    gender: 'men' | 'women' | 'kid' | 'unisex';
-    categoryId: string;
-    images?:FileList;
+  title: string;
+  slug: string;
+  description: string;
+  tags: string;
+  price: number;
+  gender: 'men' | 'women' | 'kid' | 'unisex';
+  categoryId: string;
+  images?: string[];
+  variants: VariantInput[];
 }
-const genders: Gender[] = [
-    {
-        id: "men",
-        name: "Hombre",
-    },
-    {
-        id: "women",
-        name: "Mujer",
-    },
-    {
-        id: "kid",
-        name: "Niño",
-    },
-    {
-        id: "unisex",
-        name: "Unisex",
-    },
-];
+
 interface Props {
-    product:Partial<Product> & {
-        ProductImage?: ProductWithImage[];
-    };
-    categories: Category[];
+  product?: Partial<Product> & {
+    ProductImage?: ProductWithImage[];
+    variants?: (ProductVariant | VariantInput)[];
+  };
+  categories: Category[];
 }
-const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
-export const ProductForm = ({ product, categories }: Props) => {
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const router = useRouter();
-    const {
-        handleSubmit,
-        register,
-        getValues,
-        setValue,
-        watch,
-        formState: { isValid, errors },
-    } = useForm<FormInputs>({
-        defaultValues:{
-            ...product,
-            tags: product.tags?.join(', '),
-            sizes: product.sizes ?? [],
-            images: undefined
-        }
-        });
-    watch('sizes');
-    const onSubmit:SubmitHandler<FormInputs> = async (data)=>{
-        setErrorMessage(null);
-        const formData = new FormData();
-        const {images, ...productToSave} = data;
-        if(product.id){
-            formData.append('id', product.id);
-        }
-        formData.append('title', productToSave.title);
-        formData.append('slug', productToSave.slug);
-        formData.append('description', productToSave.description);
-        formData.append('price', productToSave.price.toString());
-        formData.append('inStock', productToSave.inStock.toString());
-        formData.append('sizes', productToSave.sizes.join(','));
-        formData.append('tags', productToSave.tags);
-        formData.append('gender', productToSave.gender);
-        formData.append('categoryId', productToSave.categoryId);
-        if(images){
-            for(const image of images){
-                formData.append('images', image);
-            }
-        }
-        const {ok, product: updateProduct} = await createUpdateProduct(formData);
-        if(!ok){
-            setErrorMessage("No se pudo guardar el producto. Intenta nuevamente.");
-            return;
-        }
-        router.replace(`/admin/product/${updateProduct?.slug}`);
+const genders: Gender[] = [
+  { id: 'men', name: 'Hombre' },
+  { id: 'women', name: 'Mujer' },
+  { id: 'kid', name: 'Niño' },
+  { id: 'unisex', name: 'Unisex' },
+];
+
+const validSizes = ['GENERIC', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+export function ProductForm({ product = {}, categories }: Props) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    formState: { errors, isValid },
+  } = useForm<FormInputs>({
+    mode: 'onChange',
+    defaultValues: {
+      title: product.title ?? '',
+      slug: product.slug ?? '',
+      description: product.description ?? '',
+      tags: Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags ?? ''),
+      gender: (product.gender as FormInputs['gender']) ?? 'unisex',
+      categoryId: product?.categoryId ?? '',
+      price: product?.price,
+      images: product.ProductImage?.map((image) => image.url) ?? [],
+      variants: (product.variants ?? []).map((variant) => ({
+        color: 'color' in variant ? (variant.color ?? '') : '',
+        size: 'size' in variant ? ((variant.size as Size) ?? 'GENERIC') : 'GENERIC',
+        price: Number('price' in variant ? (variant.price ?? 0) : 0),
+        inStock: Number('stock' in variant ? (variant.stock ?? 0) : 0),
+        images: variant.images ?? [],
+      })),
+    },
+  });
+
+  // 🧩 Hook para manejar array de variantes dinámicamente
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'variants',
+  });
+  const watchedImages = useWatch({ control, name: 'images' });
+  const combinedImages = Array.from(
+    new Set([
+      ...(product.ProductImage?.map((img) => img.url) ?? []),
+      ...(Array.isArray(watchedImages) ? watchedImages : []),
+    ])
+  );
+  const onSubmit: SubmitHandler<FormInputs> = async (data) => {
+    setErrorMessage(null);
+    const formData = new FormData();
+
+    // Datos principales
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'images' && key !== 'variants' && value !== undefined) {
+        formData.append(key, String(value));
+      }
+    });
+
+    // ID si estamos editando
+    if (product.id) formData.append('id', product.id);
+
+    // Imágenes
+    if (data.images) for (const file of data.images) formData.append('images', file);
+
+    // Variantes (ya vienen completas desde RHF)
+    formData.append('variants', JSON.stringify(data.variants));
+
+    const { ok, product: updated } = await createUpdateProduct(formData);
+    if (!ok) {
+      setErrorMessage('No se pudo guardar el producto. Intenta nuevamente.');
+      return;
     }
-    const onSizeChange = (size: string) => {
-        const sizes = new Set(getValues('sizes'));
-        if (sizes.has(size)) {
-            sizes.delete(size);
-        } else {
-            sizes.add(size);
-        }
-        return setValue('sizes', Array.from(sizes))
-    }
-    return (
-        <form onSubmit={handleSubmit(onSubmit)} className="grid px-5 mb-16 grid-cols-1 sm:px-0 sm:grid-cols-2 gap-3">
-            {/* Textos */}
-            <div className="w-full">
+
+    router.replace(`/admin/product/${updated?.slug}`);
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-5 sm:px-0 mb-20"
+    >
+      {/* Información general */}
+      <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+        <h2 className="text-lg font-semibold mb-4">Información del producto</h2>
+
+        <FormInput
+          label="Título"
+          registration={register('title', { required: 'El título es requerido' })}
+          error={errors.title}
+          className="mb-3"
+          classNameInput="p-2 rounded-md"
+        />
+        <FormInput
+          label="Slug"
+          registration={register('slug', { required: 'El slug es requerido' })}
+          error={errors.slug}
+          className="mb-3"
+          classNameInput="p-2 rounded-md"
+        />
+        <FormTextArea
+          label="Descripción"
+          rows={5}
+          registration={register('description', { required: 'La descripción es requerida' })}
+          error={errors.description}
+          className="mb-3"
+          classNameInput="p-2 rounded-md"
+        />
+        <FormInput
+          label="Tags (separados por comas)"
+          registration={register('tags', { required: 'Los tags son requeridos' })}
+          error={errors.tags}
+          className="mb-3"
+          classNameInput="p-2 rounded-md"
+        />
+        <FormInput
+          label="Precio"
+          classNameInput="p-2 rounded-md"
+          className="mb-2"
+          type="number"
+          registration={register('price', { required: 'El precio es requerido', min: 0 })}
+          error={errors.price}
+        />
+        <FormSelect<Gender>
+          label="Género"
+          registration={register('gender', { required: 'El género es requerido' })}
+          options={genders}
+          getOptionValue={(c) => c.id}
+          getOptionLabel={(c) => c.name}
+          error={errors.gender}
+          className="mb-3"
+          classNameSelect="p-2 rounded-md"
+        />
+        <FormSelect<Category>
+          label="Categoría"
+          registration={register('categoryId', { required: 'La categoría es requerida' })}
+          options={categories}
+          getOptionValue={(c) => c.id}
+          getOptionLabel={(c) => c.name}
+          error={errors.categoryId}
+          className="mb-3"
+          classNameSelect="p-2 rounded-md"
+        />
+
+        <button
+          type="submit"
+          disabled={!isValid}
+          className={clsx(
+            'w-full py-2 rounded-md text-white font-medium mt-4 transition',
+            isValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+          )}
+        >
+          Guardar producto
+        </button>
+
+        {errorMessage && (
+          <div className="mt-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-md">
+            <IoAlertCircle className="w-5 h-5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Imágenes + Variantes */}
+      <div className="flex flex-col gap-6">
+        {/* Imágenes */}
+        <ImageUploader
+          initialImages={product.ProductImage}
+          onChange={(urls) => setValue('images', urls)} // actualiza el valor en el form
+        />
+
+        {/* Variantes */}
+        <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Variantes</h2>
+            <button
+              type="button"
+              onClick={() => append({ color: '', size: 'GENERIC', price: 0, inStock: 0 })}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+            >
+              <IoAddCircleOutline className="w-5 h-5" /> Agregar variante
+            </button>
+          </div>
+
+          {fields.length === 0 && <p className="text-gray-500 text-sm">No hay variantes aún.</p>}
+          <div className="space-y-4">
+            {fields.map((field, i) => (
+              <div
+                key={field.id}
+                className="grid grid-cols-1 sm:grid-cols-5 gap-2 p-3 border rounded-md bg-gray-50"
+              >
                 <FormInput
-                    label="Título"
-                    autoFocus
-                    classNameInput="p-2 rounded-md"
-                    className="mb-2"
-                    registration={register("title", { required: "El título es requerido" })}
-                    error={errors.title}
+                  label="Color"
+                  registration={register(`variants.${i}.color` as const, { required: true })}
+                  classNameInput="p-2 border rounded-md"
                 />
+
+                <FormSelect
+                  label="Talle"
+                  registration={register(`variants.${i}.size` as const, { required: true })}
+                  options={validSizes}
+                  getOptionValue={(s) => s}
+                  getOptionLabel={(s) => s}
+                  classNameSelect="p-2 border rounded-md"
+                />
+
                 <FormInput
-                    label="Slug"
-                    classNameInput="p-2 rounded-md"
-                    className="mb-2"
-                    registration={register("slug", { required: "El slug es requerido" })}
-                    error={errors.slug}
+                  label="Precio"
+                  type="number"
+                  registration={register(`variants.${i}.price` as const, {
+                    valueAsNumber: true,
+                    required: true,
+                  })}
+                  classNameInput="p-2 border rounded-md"
                 />
-                <FormTextArea
-                    label="Descripción"
-                    classNameInput="p-2 rounded-md"
-                    className="mb-2"
-                    rows={5}
-                    error={errors.description}
-                    registration={register("description", { required: "La descripción es requerida" })}
-                />
+
                 <FormInput
-                    label="Precio"
-                    classNameInput="p-2 rounded-md"
-                    className="mb-2"
-                    type="number"
-                    registration={register("price", { required: "El precio es requerido", min: 0 })}
-                    error={errors.price}
+                  label="Stock"
+                  type="number"
+                  registration={register(`variants.${i}.inStock` as const, {
+                    valueAsNumber: true,
+                    required: true,
+                  })}
+                  classNameInput="p-2 border rounded-md"
                 />
-                <FormInput
-                    label="Tags"
-                    classNameInput="p-2 rounded-md"
-                    className="mb-2"
-                    registration={register("tags", { required: "Los tags son requeridos" })}
-                    error={errors.tags}
-                />
-                <FormSelect<Gender>
-                    label="Género"
-                    classNameSelect="p-2 rounded-md"
-                    className="mb-2"
-                    registration={register("gender", { required: "El género es requerido" })}
-                    options={genders}
-                    error={errors.gender}
-                    getOptionValue={(c) => c.id}
-                    getOptionLabel={(c) => c.name}
-                />
-                <FormSelect<Category>
-                    label="Categoria"
-                    classNameSelect="p-2 rounded-md"
-                    className="mb-2"
-                    registration={register("categoryId", { required: "La categoria es requerida" })}
-                    options={categories}
-                    error={errors.categoryId}
-                    getOptionValue={(c) => c.id}
-                    getOptionLabel={(c) => c.name}
-                />
-                <button className={
-                    clsx(
-                        "w-full",
-                        {
-                            'btn-disabled': !isValid,
-                            'btn-primary': isValid,
-                        }
-                    )
-                }>
-                    Guardar
+
+                <button
+                  type="button"
+                  onClick={() => remove(i)}
+                  className="flex items-center justify-center text-red-600 hover:text-red-700"
+                >
+                  <IoTrash className="w-5 h-5" />
                 </button>
-                {errorMessage && (
-                    <div
-                        className="mt-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 flex items-center gap-2 fade-in"
-                        aria-live="polite"
-                        aria-atomic="true"
-                    >
-                        <IoAlertCircle className="h-5 w-5 flex-shrink-0 text-red-500" />
-                        <span>{errorMessage}</span>
-                    </div>
-                )}
-            </div>
-            {/* Selector de tallas y fotos */}
-            <div className="w-full">
-                <FormInput
-                    label="Inventario"
-                    classNameInput="p-2 rounded-md"
-                    className="mb-2"
-                    type="number"
-                    registration={register("inStock", { required: "El inventario es requerido", min: 0 })}
-                    /*error={errors.name}*/
+                {/* componente de imagenes variaantes */}
+                <VariantImagePicker<FormInputs>
+                  control={control}
+                  name={`variants.${i}.images`}
+                  images={combinedImages}
+                  multiple
                 />
-                {/* As checkboxes */}
-                <div className="flex flex-col">
-
-                    <span>Tallas</span>
-                    <div className="flex flex-wrap">
-
-                        {
-                            sizes.map( size => (
-                                // bg-blue-500 text-white <--- si está seleccionado
-                                <div key={ size }
-                                     onClick={()=>{onSizeChange(size)}}
-                                     className={
-                                    clsx(
-                                        "p-2 border cursor-pointer rounded-md mr-2 mb-2 w-14 transition-all text-center",
-                                        {
-                                            'bg-blue-500 text-white': getValues('sizes').includes(size)
-                                        }
-                                    )
-                                     }
-                                >
-                                    <span>{ size }</span>
-                                </div>
-                            ))
-                        }
-
-                    </div>
-
-
-                    <div className="flex flex-col mb-2">
-
-                        <span>Fotos</span>
-                        <input
-                            type="file"
-                            {...register('images')}
-                            multiple
-                            className="p-2 border rounded-md bg-gray-200"
-                            accept="image/png, image/jpeg"
-                        />
-
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {
-                            product.ProductImage?.map( image => (
-                                <div key={ image.id } className="relative">
-                                    <ProductImage
-                                        src={image.url}
-                                        alt={product.title ?? ''}
-                                        width={300}
-                                        height={300}
-                                        className="rounded-t-xl shadow-md"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => deleteProductImage(image.id, image.url)}
-                                        className="btn-danger rounded-b-xl w-full">
-                                        Eliminar
-                                    </button>
-                                </div>
-                            ))
-                        }
-                    </div>
-                </div>
-            </div>
-        </form>
-    );
-};
+                {/* fin de componente de imagenes variaantes */}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
