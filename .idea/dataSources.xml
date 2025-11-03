@@ -13,5 +13,29 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="PostgreSQL" uuid="2527e934-2f80-4c0d-951e-033880861704">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19aTHR1TVY1cEZGdFRNRXhUVHVJS0siLCJhcGlfa2V5IjoiMDFLNVFZRkNZU0RCMzZUUTZSUzJQUEhOTjEiLCJ0ZW5hbnRfaWQiOiJlZTUzMTRlNzdjZjMxNzUxZjcxNjA3OWQzNTVlZjZjN2NlZDYyNWQyN2JlYzkxYjZiNTk4NWQ5ZmNiOTQ0MjVhIiwiaW50ZXJuYWxfc2VjcmV0IjoiOTM4YzFkNTUtMjI5Yy00MWUwLWI2YzgtZjQ5NjNiNTUxZjI3In0.elG4yfCF-MrlZDDIHCMfWsSZ91lCcFUXQhFh6kBMz8o</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="com.intellij.clouds.kubernetes.db.host.port" />
+        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
+        <property name="com.intellij.clouds.kubernetes.db.container.port" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="testlo-db-vercel" uuid="e31f00c7-f16e-443f-93e5-e747a5464a1c">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://db.prisma.io:5432/postgres</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="com.intellij.clouds.kubernetes.db.host.port" />
+        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
+        <property name="com.intellij.clouds.kubernetes.db.container.port" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
