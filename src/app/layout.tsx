@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { geistMono, geistSans } from '@/app/config/fonts';
-import { Providers } from '@/components';
+import { FavoriteSync, Providers } from '@/components';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -16,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <FavoriteSync />
+          {children}
+        </Providers>
       </body>
     </html>
   );
