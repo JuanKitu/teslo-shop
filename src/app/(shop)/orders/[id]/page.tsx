@@ -1,19 +1,31 @@
 import React from 'react';
-import { PaypalButton, ProductImage, Title } from '@/components';
-import { getOrderById } from '@/actions';
+import { ProductImage, Title } from '@/components';
+import { getOrderById, mercadopagoCheckPayment } from '@/actions';
 import { redirect } from 'next/navigation';
 import { currencyFormat } from '@/utils';
 import CardPayState from './ui/CardPayState';
+import PaymentMethods from './ui/PaymentMethods';
+export const dynamic = 'force-dynamic';
+interface ParamsMeli {
+  status?: string[];
+  payment_id?: string;
+}
 interface Props {
   params: Promise<{
     id: string;
   }>;
+  searchParams?: Promise<ParamsMeli>;
 }
-export default async function orderPage({ params }: Props) {
+export default async function orderPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { ok, order } = await getOrderById(id);
   if (!ok || !order) {
     redirect('/');
+  }
+  const { status, payment_id } = (await searchParams) ?? {};
+  if (status?.includes('success') && payment_id) {
+    // Verificar el pago contra la API
+    await mercadopagoCheckPayment(payment_id);
   }
   const address = order.OrderAddress;
   return (
@@ -85,7 +97,7 @@ export default async function orderPage({ params }: Props) {
               {order.isPaid ? (
                 <CardPayState isPaid={order.isPaid} />
               ) : (
-                <PaypalButton amount={order!.total} orderId={order!.id} />
+                <PaymentMethods amount={order!.total} orderId={order!.id} />
               )}
             </div>
           </div>

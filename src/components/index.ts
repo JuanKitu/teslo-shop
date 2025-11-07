@@ -26,3 +26,5 @@ export { StockLabel } from './product/stock-label/StockLabel';
 export { Title } from './ui/title/Title';
 export { TopMenu } from './ui/top-menu/TopMenu';
 export { VariantImagePicker } from './product/variant-image-picker/VariantImagePicker';
+export { MercadoPagoButton } from './mercadopago/MercadoPagoButton';
+export { MercadoPagoInit } from './mercadopago/MercadoPagoInit';

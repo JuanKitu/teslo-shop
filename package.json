@@ -13,6 +13,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mercadopago/sdk-react": "^1.0.6",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@paypal/react-paypal-js": "^8.9.1",
     "@prisma/client": "^6.16.1",
@@ -20,6 +21,7 @@
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
+    "mercadopago": "^2.10.0",
     "next": "15.5.2",
     "next-auth": "^4.24.13",
     "react": "19.2.0",

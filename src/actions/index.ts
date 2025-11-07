@@ -24,3 +24,5 @@ export * from './product/product-pagination';
 export * from './product/upload-image';
 export * from './user/change-user-role';
 export * from './user/get-paginater-users';
+export * from './payments/mercadopago-check-payment';
+export * from './payments/mercadopago-create-preference';
