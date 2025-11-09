@@ -2,7 +2,7 @@ import React from 'react';
 import { Title } from '@/components';
 import { getCategories, getProductBySlug } from '@/actions';
 import { redirect } from 'next/navigation';
-import { ProductForm } from '@/app/(shop)/admin/product/[slug]/ui/ ProductForm';
+import { ProductForm } from './ui/product-form/ProductForm';
 interface Props {
   params: Promise<{
     slug: string;

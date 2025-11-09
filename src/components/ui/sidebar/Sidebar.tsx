@@ -15,11 +15,18 @@ import {
   IoTicketOutline,
 } from 'react-icons/io5';
 import { useUiStore } from '@/store';
+import { ThemeToggle } from '@/components';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export const Sidebar = () => {
   const { isSideMenuOpen, closeSideMenu } = useUiStore();
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const isAuthenticated = status === 'authenticated';
   const isAdmin = session?.user?.role === 'admin';
@@ -33,113 +40,162 @@ export const Sidebar = () => {
 
   const handleLogin = () => {
     closeSideMenu();
-    signIn().then(); // ✅ abre el flujo de autenticación configurado
+    signIn();
   };
+
+  // 🧩 Evitamos renderizar hasta montar para prevenir errores de hidratación
+  if (!mounted) return null;
+
+  const isDark = theme === 'dark';
 
   return (
     <div>
-      {/* Overlay oscuro */}
       {isSideMenuOpen && (
         <div className="fixed inset-0 z-10 bg-black/30 backdrop-blur-sm" onClick={closeSideMenu} />
       )}
 
-      {/* Sidebar */}
       <nav
         className={clsx(
-          'fixed right-0 top-0 z-20 h-screen w-[80%] sm:w-[400px] md:w-[500px] max-w-full bg-white shadow-2xl p-5 transform transition-transform duration-300',
+          'fixed right-0 top-0 z-20 h-screen w-[80%] sm:w-[400px] md:w-[500px] max-w-full p-5 transform transition-transform duration-300 shadow-2xl border-l',
           {
             'translate-x-full': !isSideMenuOpen,
+            'bg-white text-gray-900 border-gray-200': !isDark,
+            'bg-[var(--color-bg)] text-[var(--color-text)] border-[var(--color-border)]': isDark,
           }
         )}
       >
         {/* Cerrar menú */}
         <IoCloseOutline
           size={40}
-          className="absolute top-5 right-5 cursor-pointer hover:text-gray-600 transition-colors"
+          className={clsx(
+            'absolute top-5 right-5 cursor-pointer transition-colors',
+            isDark ? 'hover:text-gray-400' : 'hover:text-gray-600'
+          )}
           onClick={closeSideMenu}
         />
 
         {/* Buscar */}
         <div className="relative mt-14">
-          <IoSearchOutline size={20} className="absolute top-2 left-2 text-gray-500" />
+          <IoSearchOutline
+            size={20}
+            className={clsx(
+              'absolute top-2 left-2',
+              isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'
+            )}
+          />
           <input
             type="text"
             placeholder="Buscar"
-            className="w-full bg-gray-50 rounded pl-10 py-2 border-b-2 border-gray-200 text-lg focus:outline-none focus:border-blue-500"
+            className={clsx(
+              'w-full rounded pl-10 py-2 border-b-2 text-lg focus:outline-none focus:border-blue-500 transition-colors',
+              isDark
+                ? 'bg-[var(--color-card)] border-[var(--color-border)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:border-blue-400'
+                : 'bg-gray-50 border-gray-200 text-black placeholder-gray-500'
+            )}
           />
         </div>
 
-        {/* --- Usuario autenticado --- */}
+        <div className="relative mt-8 mb-4">
+          <ThemeToggle />
+        </div>
+
+        {/* Usuario autenticado */}
         {isAuthenticated && (
           <>
             <Link
               href="/profile"
               onClick={closeSideMenu}
-              className="flex items-center mt-8 p-2 hover:bg-gray-100 rounded transition-all"
+              className={clsx(
+                'flex items-center mt-6 p-2 rounded transition-all',
+                isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+              )}
             >
-              <IoPersonOutline size={28} />
+              <IoPersonOutline size={26} />
               <span className="ml-3 text-lg">Perfil</span>
             </Link>
 
             <Link
               href="/orders"
               onClick={closeSideMenu}
-              className="flex items-center mt-4 p-2 hover:bg-gray-100 rounded transition-all"
+              className={clsx(
+                'flex items-center mt-3 p-2 rounded transition-all',
+                isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+              )}
             >
-              <IoTicketOutline size={28} />
+              <IoTicketOutline size={26} />
               <span className="ml-3 text-lg">Órdenes</span>
             </Link>
 
             <button
               onClick={handleLogout}
-              className="flex w-full items-center mt-8 p-2 hover:bg-gray-100 rounded transition-all text-left"
+              className={clsx(
+                'flex w-full items-center mt-6 p-2 rounded transition-all text-left',
+                isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+              )}
             >
-              <IoLogOutOutline size={28} />
+              <IoLogOutOutline size={26} />
               <span className="ml-3 text-lg">Salir</span>
             </button>
           </>
         )}
 
-        {/* --- Usuario no autenticado --- */}
+        {/* Usuario no autenticado */}
         {!isAuthenticated && (
           <button
             onClick={handleLogin}
-            className="flex items-center mt-8 p-2 hover:bg-gray-100 rounded transition-all w-full text-left"
+            className={clsx(
+              'flex items-center mt-6 p-2 rounded transition-all w-full text-left',
+              isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+            )}
           >
-            <IoLogInOutline size={28} />
+            <IoLogInOutline size={26} />
             <span className="ml-3 text-lg">Ingresar</span>
           </button>
         )}
 
-        {/* --- Zona de administración --- */}
+        {/* Administración */}
         {isAdmin && (
           <>
-            <div className="w-full h-px bg-gray-200 my-10" />
+            <div
+              className={clsx(
+                'w-full h-px my-8',
+                isDark ? 'bg-[var(--color-border)]' : 'bg-gray-200'
+              )}
+            />
 
             <Link
               href="/admin/products"
               onClick={closeSideMenu}
-              className="flex items-center mt-4 p-2 hover:bg-gray-100 rounded transition-all"
+              className={clsx(
+                'flex items-center mt-4 p-2 rounded transition-all',
+                isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+              )}
             >
-              <IoShirtOutline size={28} />
+              <IoShirtOutline size={26} />
               <span className="ml-3 text-lg">Productos</span>
             </Link>
 
             <Link
               href="/admin/orders"
               onClick={closeSideMenu}
-              className="flex items-center mt-4 p-2 hover:bg-gray-100 rounded transition-all"
+              className={clsx(
+                'flex items-center mt-4 p-2 rounded transition-all',
+                isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+              )}
             >
-              <IoTicketOutline size={28} />
+              <IoTicketOutline size={26} />
               <span className="ml-3 text-lg">Órdenes</span>
             </Link>
 
             <Link
               href="/admin/users"
               onClick={closeSideMenu}
-              className="flex items-center mt-4 p-2 hover:bg-gray-100 rounded transition-all"
+              className={clsx(
+                'flex items-center mt-4 p-2 rounded transition-all',
+                isDark ? 'hover:bg-[var(--color-card)]' : 'hover:bg-gray-100'
+              )}
             >
-              <IoPeopleOutline size={28} />
+              <IoPeopleOutline size={26} />
               <span className="ml-3 text-lg">Usuarios</span>
             </Link>
           </>

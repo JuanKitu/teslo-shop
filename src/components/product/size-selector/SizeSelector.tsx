@@ -37,8 +37,8 @@ export function SizeSelector({ variants }: Props) {
                 className={clsx(
                   'px-3 py-1 rounded border transition-colors',
                   size === selectedVariant?.size
-                    ? 'border-black font-semibold'
-                    : 'border-gray-300 hover:border-black'
+                    ? 'border-blue-500 border-3 font-semibold'
+                    : 'border-gray-500 border-3 hover:border-blue-500'
                 )}
                 onMouseEnter={() => setHoveredSize(variant.size)}
                 onMouseLeave={() => setHoveredSize(null)}

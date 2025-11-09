@@ -5,7 +5,6 @@ import { ProductsInCart } from '@/app/(shop)/cart/ui/ProductsInCart';
 import { OrderSummary } from '@/app/(shop)/cart/ui/OrderSummary';
 
 export default function CartPage() {
-  //redirect("/empty")
   return (
     <div className="flex justify-center items-center mb-72 px-10 sm:px-0">
       <div className="flex flex-col w-[1000px]">
@@ -22,9 +21,7 @@ export default function CartPage() {
           </div>
 
           {/* Checkout */}
-          <div className="bg-white rounded-xl shadow-xl p-7 h-fit">
-            <OrderSummary />
-          </div>
+          <OrderSummary />
         </div>
       </div>
     </div>

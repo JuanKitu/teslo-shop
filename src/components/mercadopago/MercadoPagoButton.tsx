@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { Wallet } from '@mercadopago/sdk-react';
+import { useTheme } from 'next-themes';
 import { createMercadoPagoPreference } from '@/actions';
+import {
+  IWalletBrickDarkCustomization,
+  IWalletBrickDefaultCustomization,
+} from '@mercadopago/sdk-react/esm/bricks/wallet/types';
 
 interface Props {
   orderId: string;
@@ -11,7 +16,8 @@ interface Props {
 
 export function MercadoPagoButton({ orderId, amount }: Props) {
   const [preferenceId, setPreferenceId] = useState<string | null | undefined>(null);
-
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   useEffect(() => {
     (async () => {
       const id = await createMercadoPagoPreference(orderId, amount);
@@ -27,9 +33,16 @@ export function MercadoPagoButton({ orderId, amount }: Props) {
     );
   }
 
+  const customization: IWalletBrickDarkCustomization | IWalletBrickDefaultCustomization = {
+    theme: isDark ? 'dark' : 'default',
+    customStyle: {
+      hideValueProp: true,
+    },
+  };
+
   return (
     <div className="relative z-0">
-      <Wallet initialization={{ preferenceId }} />
+      <Wallet customization={customization} initialization={{ preferenceId }} />
     </div>
   );
 }

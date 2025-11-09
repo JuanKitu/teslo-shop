@@ -1,64 +1,81 @@
 @import 'tailwindcss';
 
+/* 🌗 Colores base (modo claro) */
 :root {
-  --primary: #274494;
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-/* 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-} */
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, transparent, rgb(var(--background-start-rgb)))
-    rgb(var(--background-end-rgb));
+    --color-bg: #f9f9f9;
+    --color-text: #202020; /* gris muy oscuro, no negro absoluto */
+    --color-muted: #606060; /* texto secundario tipo YouTube */
+    --color-card: #ffffff;
+    --color-border: #e5e5e5;
 }
 
+/* 🌙 Modo oscuro (YouTube Dark, descansado para la vista) */
+html.dark {
+    --color-bg: #181818;      /* fondo gris muy oscuro pero no negro */
+    --color-text: #d0d0d0;    /* texto gris claro suave */
+    --color-muted: #9b9b9b;   /* texto secundario tenue */
+    --color-card: #1f1f1f;    /* gris oscuro suave para contenedores */
+    --color-border: #2a2a2a;  /* bordes suaves, no tan marcados */
+}
+
+/* ================================
+   🧱 BASE GLOBAL
+================================== */
+
+@layer base {
+    html {
+        @apply transition-colors duration-300 ease-in-out;
+    }
+
+    body {
+        color: var(--color-text);
+        background-color: var(--color-bg);
+        @apply transition-colors duration-300 ease-in-out antialiased;
+    }
+
+    a {
+        @apply transition-colors;
+    }
+
+    hr {
+        border-color: var(--color-border);
+    }
+}
+
+/* ✨ Animaciones */
 @keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
 
 .fade-in {
-  -webkit-animation-duration: 0.5s;
-  animation-duration: 0.5s;
-  -webkit-animation-fill-mode: both;
-  animation-fill-mode: both;
-
-  -webkit-animation-name: fadeIn;
-  animation-name: fadeIn;
+    animation: fadeIn 0.4s ease-in-out both;
 }
 
+/* 🎨 Botones */
 .btn-primary {
-  @apply bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded transition-all;
+    @apply bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-all shadow-sm;
 }
+
 .btn-disabled {
-  @apply bg-gray-600 text-white py-2 px-4 rounded transition-all opacity-70 cursor-not-allowed;
+    @apply bg-gray-500 text-white py-2 px-4 rounded-lg opacity-60 cursor-not-allowed;
 }
 
 .btn-secondary {
-  @apply bg-gray-200 hover:bg-gray-300 text-black py-2 px-4 rounded transition-all;
+    @apply bg-gray-100 hover:bg-gray-200 text-black py-2 px-4 rounded-lg transition-all shadow-sm
+    dark:bg-[#2f2f2f] dark:hover:bg-[#3a3a3a] dark:text-[#f1f1f1];
 }
+
 .btn-danger {
-  @apply bg-red-500 hover:bg-red-700 text-white py-2 px-4 transition-all;
+    @apply bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-all shadow-sm;
+}
+
+/* 🌈 Extra: bordes y contenedores (opcional, estilo más limpio) */
+.card {
+    @apply rounded-xl p-4 shadow-md bg-white dark:bg-[#1f1f1f] transition-colors;
+}
+
+.input {
+    @apply border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm
+    focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all;
 }

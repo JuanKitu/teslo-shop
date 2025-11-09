@@ -31,7 +31,7 @@ export function ColorSelector({ variants }: Props) {
   const displayColor = hoveredColor || selectedVariant?.color || 'Elegí';
   return (
     <div className="my-4">
-      <h3 className="font-semibold mb-3 text-gray-800 text-sm uppercase tracking-wide">
+      <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide">
         Color: <span className="font-normal normal-case">{displayColor}</span>
       </h3>
 
@@ -44,8 +44,8 @@ export function ColorSelector({ variants }: Props) {
               onMouseLeave={() => setHoveredColor(null)}
               className={`relative w-12 h-12 rounded-lg overflow-hidden border transition-all duration-200 ${
                 selectedVariant?.color === variant.color
-                  ? 'border-black scale-105 shadow-md'
-                  : 'border-gray-300 hover:border-black hover:scale-105'
+                  ? 'border-blue-500 border-3 scale-105 shadow-md'
+                  : 'border-gray-500 border-3 hover:border-blue-500 hover:scale-105'
               }`}
             >
               <div className="relative w-full h-full">
