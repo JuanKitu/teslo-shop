@@ -8,10 +8,12 @@ import clsx from 'clsx';
 import { placeOrder } from '@/actions';
 import { useRouter } from 'next/navigation';
 import { ErrorMessage } from './ErrorMessage';
+import { useTheme } from 'next-themes';
 
 export function PlaceOrder() {
   const router = useRouter();
   const [loaded, setLoaded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const address = useAddressStore((state) => state.address);
@@ -21,9 +23,15 @@ export function PlaceOrder() {
   const cart = useCartStore((state) => state.cart);
   const clearCart = useCartStore((state) => state.clearCart);
   const setRefresh = useCheckoutStore((state) => state.setRefresh);
+  const { theme } = useTheme();
+
   useEffect(() => {
     setLoaded(true);
+    setMounted(true);
   }, []);
+
+  const isDark = theme === 'dark';
+
   const onPlaceOrder = async () => {
     setIsPlacingOrder(true);
     const productOrder = cart.map((product) => ({
@@ -46,11 +54,20 @@ export function PlaceOrder() {
     }
     router.replace(`/orders/${response.order!.id}`);
   };
-  if (!loaded) {
+
+  if (!loaded || !mounted) {
     return <PlaceOrderLoading />;
   }
+
   return (
-    <div className="bg-white rounded-xl shadow-xl p-7">
+    <div
+      className={clsx(
+        'rounded-xl shadow-xl p-7 border',
+        isDark
+          ? 'bg-[var(--color-card)] text-[var(--color-text)] border-[var(--color-border)]'
+          : 'bg-white text-gray-900 border-gray-200'
+      )}
+    >
       <h2 className="text-2xl mb-2 font-bold">Dirección de entrega</h2>
       <div className="mb-10">
         <p className="text-xl">{`${address.firstName} ${address.lastName}`}</p>
@@ -60,8 +77,13 @@ export function PlaceOrder() {
         <p>{`${address.city} ${address.country}`}</p>
         <p>{address.phone}</p>
       </div>
-      {/* Divider */}
-      <div className="w-full h-0.5 rounded bg-gray-300 mb-10"></div>
+
+      <div
+        className={clsx(
+          'w-full h-0.5 rounded mb-10',
+          isDark ? 'bg-[var(--color-border)]' : 'bg-gray-300'
+        )}
+      />
 
       <h2 className="text-2xl mb-2">Resumen de orden</h2>
       <div className="grid grid-cols-2">
@@ -79,18 +101,21 @@ export function PlaceOrder() {
         <span className="mt-5 text-2xl">Total:</span>
         <span className="mt-5 text-2xl text-right">{currencyFormat(total)}</span>
       </div>
+
       <div className="mt-5 mb-2 w-full">
         <button
           onClick={onPlaceOrder}
           disabled={isPlacingOrder}
-          className={clsx('flex justify-center', {
-            'btn-primary': !isPlacingOrder,
-            'btn-disabled pointer-disabled': isPlacingOrder,
+          className={clsx('flex justify-center w-full py-2 rounded transition-all', {
+            'bg-blue-600 text-white hover:bg-blue-700': !isPlacingOrder && !isDark,
+            'bg-blue-500 text-white hover:bg-blue-600': !isPlacingOrder && isDark,
+            'opacity-50 cursor-not-allowed': isPlacingOrder,
           })}
         >
           Colocar orden
         </button>
       </div>
+
       {errorMessage && <ErrorMessage errorMessage={errorMessage} />}
     </div>
   );

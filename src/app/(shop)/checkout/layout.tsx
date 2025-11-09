@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import HotSessionWatcher from '@/components/session/HotSessionWatcher';
-import { getServerSession, Session } from 'next-auth';
+import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation'; // client component
 

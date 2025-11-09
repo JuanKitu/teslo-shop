@@ -5,20 +5,38 @@ import { useCartStore } from '@/store';
 import { OrderSummaryLoading } from '@/app/(shop)/cart/ui/OrderSummaryLoading';
 import { useShallow } from 'zustand/react/shallow';
 import { currencyFormat } from '@/utils';
+import { useTheme } from 'next-themes';
+import clsx from 'clsx';
 
 export function OrderSummary() {
   const [loaded, setLoaded] = useState(false);
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setLoaded(true);
+    setMounted(true);
+  }, []);
+
+  const isDark = theme === 'dark';
+
   const { itemsInCart, subtotal, tax, total } = useCartStore(
     useShallow((state) => state.getSummaryInformation())
   );
-  useEffect(() => {
-    setLoaded(true);
-  }, []);
-  if (!loaded) {
+
+  if (!loaded || !mounted) {
     return <OrderSummaryLoading />;
   }
+
   return (
-    <>
+    <div
+      className={clsx(
+        'rounded-xl shadow-xl p-7 h-fit border',
+        isDark
+          ? 'bg-[var(--color-card)] text-[var(--color-text)] border-[var(--color-border)]'
+          : 'bg-white text-gray-900 border-gray-200'
+      )}
+    >
       <h2 className="text-2xl mb-2">Resumen de orden</h2>
       <div className="grid grid-cols-2">
         <span>Nro. Productos</span>
@@ -40,6 +58,6 @@ export function OrderSummary() {
           Checkout
         </Link>
       </div>
-    </>
+    </div>
   );
 }

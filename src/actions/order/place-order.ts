@@ -3,7 +3,8 @@
 import { Address, Size } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import type { Order, OrderItem, ProductVariant, OrderAddress } from '@prisma/client';
-import { getServerSession, Session } from 'next-auth';
+import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export interface ProductToOrder {

@@ -1,7 +1,8 @@
 import { Title } from '@/components';
 import { AddressForm } from './ui/AddressForm';
 import { getCountries, getUserAddress } from '@/actions';
-import { getServerSession, Session } from 'next-auth';
+import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 export default async function AddressPage() {
   const countries = await getCountries();

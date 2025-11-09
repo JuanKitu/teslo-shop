@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { Title } from '@/components';
 import { getPaginatedUsers } from '@/actions';
-import { UsersTable } from './ui/UsersTable';
+import { UsersTable } from './ui/users-table/UsersTable';
 
 export const revalidate = 0;
 

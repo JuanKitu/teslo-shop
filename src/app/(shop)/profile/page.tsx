@@ -1,7 +1,8 @@
 import React from 'react';
 import { Title } from '@/components';
 import { redirect } from 'next/navigation';
-import { getServerSession, Session } from 'next-auth';
+import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export default async function ProfilePage() {
