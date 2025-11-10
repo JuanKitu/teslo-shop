@@ -23,6 +23,7 @@ export { ProductMobileSlideshow } from './product/slideshow/ProductMobileSlidesh
 export { ProductSlideshow } from './product/slideshow/ProductSlideshow';
 export { Providers } from './providers/Providers';
 export { QuantitySelector } from './product/quantity-selector/QuantitySelector';
+export { SearchBar } from './search/search-bar/SearchBar';
 export { SideBarItem } from './ui/sidebar/SideBarItem';
 export { Sidebar } from './ui/sidebar/Sidebar';
 export { SizeSelector } from './product/size-selector/SizeSelector';

@@ -132,10 +132,25 @@ model User {
   address UserAddress?
 
   // Relaciones
-  Order    Order[]
-  Favorite Favorite[]
-  Account  Account[]
-  Session  Session[]
+  Order     Order[]
+  Favorite  Favorite[]
+  Account   Account[]
+  Session   Session[]
+  SearchLog SearchLog[]
+}
+
+model SearchLog {
+  id           String   @id @default(uuid())
+  term         String
+  resultsCount Int
+  userId       String?
+  timestamp    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([term])
+  @@index([timestamp])
+  @@index([userId])
 }
 
 model Country {
