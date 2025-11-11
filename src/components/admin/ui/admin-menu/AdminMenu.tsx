@@ -89,7 +89,6 @@ export function AdminMenu() {
       {/* Footer (opcional) */}
       <div className={clsx('pt-4 border-t', isDark ? 'border-gray-700' : 'border-gray-200')}>
         <ThemeToggle />
-        <p className={clsx('text-xs', isDark ? 'text-gray-500' : 'text-gray-400')}>Version 1.0.0</p>
       </div>
     </div>
   );
