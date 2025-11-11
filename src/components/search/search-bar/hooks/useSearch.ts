@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { searchProducts, saveSearch } from '@/actions';
-import { SearchResult } from '@/interfaces';
 import { useSearchStore } from '@/store';
+import { SearchResult } from '@/interfaces';
 
 export const useSearch = () => {
   const [query, setQuery] = useState('');
@@ -9,29 +9,33 @@ export const useSearch = () => {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [suggestion, setSuggestion] = useState<string | undefined>(); // ✅ Nuevo
 
-  // ✅ Corrección: inicializar con null
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const addSearch = useSearchStore((state) => state.addSearch);
 
-  // Búsqueda con debounce
   const performSearch = useCallback(
     async (searchTerm: string) => {
       if (!searchTerm || searchTerm.trim().length < 2) {
         setResults([]);
+        setSuggestion(undefined);
         return;
       }
 
       setLoading(true);
       try {
-        const { ok, results: searchResults, total } = await searchProducts(searchTerm, 10);
+        const {
+          ok,
+          results: searchResults,
+          total,
+          suggestion: searchSuggestion,
+        } = await searchProducts(searchTerm, 10);
 
         if (ok) {
           setResults(searchResults);
+          setSuggestion(searchSuggestion); // ✅ Guardar sugerencia
           addSearch(searchTerm, total);
 
-          // Guardar en BD para analytics
           saveSearch({ term: searchTerm, resultsCount: total }).catch((error) => {
             console.error('Error saving search to DB:', error);
           });
@@ -39,6 +43,7 @@ export const useSearch = () => {
       } catch (error) {
         console.error('Search error:', error);
         setResults([]);
+        setSuggestion(undefined);
       } finally {
         setLoading(false);
       }
@@ -46,13 +51,11 @@ export const useSearch = () => {
     [addSearch]
   );
 
-  // Handle input change con debounce
   const handleInputChange = useCallback(
     (value: string) => {
       setQuery(value);
       setSelectedIndex(-1);
 
-      // ✅ Verificar si existe antes de limpiar
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -64,13 +67,13 @@ export const useSearch = () => {
         }, 300);
       } else {
         setResults([]);
+        setSuggestion(undefined);
         setIsOpen(false);
       }
     },
     [performSearch]
   );
 
-  // Navegación con teclado
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!isOpen) return;
@@ -99,15 +102,22 @@ export const useSearch = () => {
     [isOpen, results, selectedIndex]
   );
 
-  // Limpiar búsqueda
   const clearSearch = useCallback(() => {
     setQuery('');
     setResults([]);
+    setSuggestion(undefined);
     setIsOpen(false);
     setSelectedIndex(-1);
   }, []);
 
-  // Cleanup
+  // ✅ Aplicar sugerencia
+  const applySuggestion = useCallback(() => {
+    if (suggestion) {
+      handleInputChange(suggestion);
+      setSuggestion(undefined);
+    }
+  }, [suggestion, handleInputChange]);
+
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
@@ -122,9 +132,11 @@ export const useSearch = () => {
     loading,
     isOpen,
     selectedIndex,
+    suggestion, // ✅ Exportar sugerencia
     setIsOpen,
     handleInputChange,
     handleKeyDown,
     clearSearch,
+    applySuggestion, // ✅ Exportar función
   };
 };

@@ -19,6 +19,8 @@ export function SearchBar() {
     loading,
     isOpen,
     selectedIndex,
+    suggestion,
+    applySuggestion,
     setIsOpen,
     handleInputChange,
     handleKeyDown,
@@ -75,12 +77,14 @@ export function SearchBar() {
         recentSearches={recentSearches}
         selectedIndex={selectedIndex}
         loading={loading}
+        suggestion={suggestion} // ✅ Nuevo
         isDark={isDark}
         onClose={() => setIsOpen(false)}
         onSelectTrending={handleSelectTrending}
         onSelectRecent={handleSelectRecent}
         onRemoveRecent={removeSearch}
         onClearAllRecent={clearAll}
+        onApplySuggestion={applySuggestion} // ✅ Nuevo
       />
     </div>
   );
