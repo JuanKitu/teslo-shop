@@ -1,3 +1,5 @@
+export { AdminMenu } from './admin/ui/admin-menu/AdminMenu';
+export { AdminMenuItem } from './admin/ui/admin-menu/AdminMenuItem';
 export { CartWarning } from './cart/CartWarning';
 export { ColorSelector } from './product/color-selector/ColorSelector';
 export { FadeImage } from './product/fade-image/FadeImage';
