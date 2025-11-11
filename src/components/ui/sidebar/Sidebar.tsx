@@ -39,7 +39,7 @@ export const Sidebar = () => {
 
   const handleLogin = () => {
     closeSideMenu();
-    signIn();
+    signIn().then();
   };
 
   // 🧩 Evitamos renderizar hasta montar para prevenir errores de hidratación
