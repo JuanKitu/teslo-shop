@@ -9,7 +9,11 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
     images: true;
     variants: true;
-    category: true;
+    categories: {
+      include: {
+        category: true;
+      };
+    };
     Favorite: true;
     OrderItem: {
       select: {
@@ -36,21 +40,69 @@ export async function searchProducts(
 
     const searchTerm = query.trim().toLowerCase();
 
-    // 1. Búsqueda exacta primero
+    // 🔍 1. Búsqueda exacta primero
     const exactMatches = await prisma.product.findMany({
       where: {
+        isActive: true,
+        deletedAt: null,
         OR: [
           { title: { contains: searchTerm, mode: 'insensitive' } },
           { description: { contains: searchTerm, mode: 'insensitive' } },
           { tags: { has: searchTerm } },
           { slug: { contains: searchTerm, mode: 'insensitive' } },
+          // Buscar en nombres de categorías
+          {
+            categories: {
+              some: {
+                category: {
+                  name: { contains: searchTerm, mode: 'insensitive' },
+                  isActive: true,
+                  deletedAt: null,
+                },
+              },
+            },
+          },
+          // Buscar en nombres de marcas
+          {
+            brands: {
+              some: {
+                brand: {
+                  name: { contains: searchTerm, mode: 'insensitive' },
+                  isActive: true,
+                  deletedAt: null,
+                },
+              },
+            },
+          },
         ],
       },
       take: limit,
       include: {
-        images: { take: 1 },
-        variants: true,
-        category: true,
+        images: {
+          take: 1,
+          orderBy: { order: 'asc' },
+        },
+        variants: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+        },
+        categories: {
+          where: {
+            category: {
+              isActive: true,
+              deletedAt: null,
+            },
+          },
+          include: {
+            category: true,
+          },
+          orderBy: [
+            { isPrimary: 'desc' }, // Primary primero
+            { order: 'asc' },
+          ],
+        },
         Favorite: true,
         OrderItem: { select: { quantity: true } },
       },
@@ -65,14 +117,37 @@ export async function searchProducts(
       };
     }
 
-    // 2. Si no hay suficientes resultados, aplicar fuzzy search
+    // 🧪 2. Si no hay suficientes resultados, aplicar fuzzy search
     if (useFuzzy) {
       const allProducts = await prisma.product.findMany({
+        where: {
+          isActive: true,
+          deletedAt: null,
+        },
         take: 1000,
         include: {
-          images: { take: 1 },
-          variants: true,
-          category: true,
+          images: {
+            take: 1,
+            orderBy: { order: 'asc' },
+          },
+          variants: {
+            where: {
+              isActive: true,
+              deletedAt: null,
+            },
+          },
+          categories: {
+            where: {
+              category: {
+                isActive: true,
+                deletedAt: null,
+              },
+            },
+            include: {
+              category: true,
+            },
+            orderBy: [{ isPrimary: 'desc' }, { order: 'asc' }],
+          },
           Favorite: true,
           OrderItem: { select: { quantity: true } },
         },
@@ -83,7 +158,8 @@ export async function searchProducts(
         allProducts,
         searchTerm,
         (product) => {
-          return [product.title, product.description, ...product.tags, product.category.name]
+          const categoryNames = product.categories.map((pc) => pc.category.name);
+          return [product.title, product.description, ...product.tags, ...categoryNames]
             .join(' ')
             .toLowerCase();
         },
@@ -97,7 +173,7 @@ export async function searchProducts(
         ...fuzzyResults.filter((p) => !exactIds.has(p.id)).slice(0, limit - exactMatches.length),
       ];
 
-      // Buscar sugerencia
+      // 💡 Buscar sugerencia
       let suggestion: string | undefined;
 
       if (combinedResults.length < 3) {
@@ -147,9 +223,9 @@ export async function searchProducts(
 
 function mapProductsToResults(products: ProductWithRelations[]): SearchResult[] {
   return products.map((product) => {
-    const totalStock = product.variants.reduce((sum: number, variant) => sum + variant.inStock, 0);
+    const totalStock = product.variants.reduce((sum, variant) => sum + variant.inStock, 0);
 
-    const totalSold = product.OrderItem.reduce((sum: number, item) => sum + item.quantity, 0);
+    const totalSold = product.OrderItem.reduce((sum, item) => sum + item.quantity, 0);
 
     let badge: SearchResult['badge'] = undefined;
 
@@ -159,6 +235,11 @@ function mapProductsToResults(products: ProductWithRelations[]): SearchResult[] 
       badge = 'trending';
     }
 
+    // Obtener categoría primaria o la primera disponible
+    const primaryCategory = product.categories.find((pc) => pc.isPrimary)?.category;
+    const firstCategory = product.categories[0]?.category;
+    const category = primaryCategory || firstCategory;
+
     return {
       id: product.id,
       title: product.title,
@@ -167,7 +248,7 @@ function mapProductsToResults(products: ProductWithRelations[]): SearchResult[] 
       image: product.images[0]?.url || '/imgs/placeholder.jpg',
       badge,
       stock: totalStock,
-      category: product.category.name,
+      category: category?.name || 'Sin categoría',
     };
   });
 }

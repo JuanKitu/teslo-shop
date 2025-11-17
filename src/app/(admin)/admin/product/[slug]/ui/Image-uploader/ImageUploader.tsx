@@ -1,3 +1,5 @@
+// ImageUploader.tsx
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -11,13 +13,18 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { getImageUploaderStyles } from './styles';
 import type { ImageUploaderProps } from './image-uploader.interface';
 
-export function ImageUploader({ initialImages = [], onChange }: ImageUploaderProps) {
+export function ImageUploader({
+  initialImages = [],
+  onChange,
+  maxImages = 10,
+}: ImageUploaderProps) {
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
 
-  const { images, uploading, error, onDrop, handleDelete } = useImageUploader({
+  const { images, uploading, error, onDrop, handleDelete, hasReachedLimit } = useImageUploader({
     initialImages,
     onChange,
+    maxImages,
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -28,7 +35,7 @@ export function ImageUploader({ initialImages = [], onChange }: ImageUploaderPro
       'image/webp': ['.webp'],
     },
     maxSize: 5 * 1024 * 1024, // 5MB
-    disabled: uploading,
+    disabled: uploading || hasReachedLimit, // 🆕 Deshabilitar si alcanzó el límite
     multiple: true,
   });
 
@@ -48,6 +55,12 @@ export function ImageUploader({ initialImages = [], onChange }: ImageUploaderPro
   return (
     <div className={styles.card}>
       {/* Header */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold">Imágenes del Producto</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          {images.length} / {maxImages} imágenes
+        </p>
+      </div>
 
       {/* Mensaje de error */}
       {error && (
@@ -63,16 +76,31 @@ export function ImageUploader({ initialImages = [], onChange }: ImageUploaderPro
         </div>
       )}
 
-      {/* DropZone */}
-      <DropZone
-        isDragActive={isDragActive}
-        getRootProps={getRootProps}
-        getInputProps={getInputProps}
-        isDark={isDark}
-        disabled={uploading}
-      />
-
       {/* Mensaje de límite alcanzado */}
+      {hasReachedLimit && (
+        <div
+          className={clsx(
+            'mb-4 p-3 rounded-md text-sm border',
+            isDark
+              ? 'bg-yellow-950/20 border-yellow-900 text-yellow-400'
+              : 'bg-yellow-50 border-yellow-200 text-yellow-600'
+          )}
+        >
+          Has alcanzado el límite de {maxImages} imágenes. Elimina alguna para subir más.
+        </div>
+      )}
+
+      {/* DropZone - Solo mostrar si no alcanzó el límite */}
+      {!hasReachedLimit && (
+        <DropZone
+          isDragActive={isDragActive}
+          getRootProps={getRootProps}
+          getInputProps={getInputProps}
+          isDark={isDark}
+          disabled={uploading}
+        />
+      )}
+
       {/* Loading Spinner */}
       {uploading && <LoadingSpinner isDark={isDark} />}
 
@@ -80,6 +108,11 @@ export function ImageUploader({ initialImages = [], onChange }: ImageUploaderPro
       <ImageGrid images={images} onDelete={handleDelete} isDark={isDark} />
 
       {/* Footer info */}
+      {images.length === 0 && !uploading && (
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+          No hay imágenes cargadas
+        </p>
+      )}
     </div>
   );
 }

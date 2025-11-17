@@ -1,14 +1,39 @@
+// hooks/useImageUploader.ts
+
 import { useState, useCallback } from 'react';
 import { uploadImages, deleteProductImage } from '@/actions';
-import type { ImageUploaderProps } from '../image-uploader.interface';
+import type { ImageUploaderProps, InitialImage } from '../image-uploader.interface';
 
-export const useImageUploader = ({ initialImages = [], onChange }: ImageUploaderProps) => {
-  const [images, setImages] = useState<string[]>(initialImages.map((i) => i.url));
+/**
+ * Helper para normalizar imágenes a string[]
+ */
+const normalizeImages = (images: InitialImage[]): string[] => {
+  return images.map((img) => {
+    if (typeof img === 'string') {
+      return img;
+    }
+    return img.url;
+  });
+};
+
+export const useImageUploader = ({
+  initialImages = [],
+  onChange,
+  maxImages = 10,
+}: ImageUploaderProps) => {
+  const [images, setImages] = useState<string[]>(normalizeImages(initialImages));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
+      // Validar límite de imágenes
+      if (maxImages && images.length + acceptedFiles.length > maxImages) {
+        setError(`Solo puedes subir un máximo de ${maxImages} imágenes.`);
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+
       setUploading(true);
       setError(null);
 
@@ -25,7 +50,7 @@ export const useImageUploader = ({ initialImages = [], onChange }: ImageUploader
         setUploading(false);
       }
     },
-    [images, onChange]
+    [images, onChange, maxImages]
   );
 
   const handleDelete = useCallback(
@@ -54,5 +79,6 @@ export const useImageUploader = ({ initialImages = [], onChange }: ImageUploader
     error,
     onDrop,
     handleDelete,
+    hasReachedLimit: maxImages ? images.length >= maxImages : false, // 🆕 Helper
   };
 };

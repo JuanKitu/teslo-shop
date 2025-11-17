@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { Product } from '@/interfaces';
-import { Size } from '@prisma/client';
+import type { Product } from '@/interfaces';
 
 interface VariantInfo {
   totalInventory: number;
@@ -8,7 +7,7 @@ interface VariantInfo {
   availableColors: string;
   priceRange: string;
   inventoryStatus: 'out-of-stock' | 'low-stock' | 'in-stock';
-  uniqueSizes: Size[];
+  uniqueSizes: string[]; // ✅ Ya no es Size[] sino string[]
   uniqueColors: string[];
 }
 
@@ -16,7 +15,7 @@ export const useProductVariants = (product: Product): VariantInfo => {
   // Calcular inventario total
   const totalInventory = useMemo(() => {
     if (!product.variants || product.variants.length === 0) return 0;
-    return product.variants.reduce((acc, variant) => acc + variant.stock, 0);
+    return product.variants.reduce((acc, variant) => acc + variant.inStock, 0); // ✅ stock → inStock
   }, [product.variants]);
 
   // Obtener tallas únicas con stock
@@ -24,8 +23,8 @@ export const useProductVariants = (product: Product): VariantInfo => {
     if (!product.variants) return [];
 
     const sizesWithStock = product.variants
-      .filter((variant) => variant.stock > 0)
-      .map((variant) => variant.size);
+      .filter((variant) => variant.inStock > 0 && variant.size) // ✅ stock → inStock, validar que size existe
+      .map((variant) => variant.size!); // ✅ size ya es string | undefined
 
     // Eliminar duplicados
     return [...new Set(sizesWithStock)];
@@ -36,8 +35,8 @@ export const useProductVariants = (product: Product): VariantInfo => {
     if (!product.variants) return [];
 
     const colorsWithStock = product.variants
-      .filter((variant) => variant.stock > 0)
-      .map((variant) => variant.color);
+      .filter((variant) => variant.inStock > 0 && variant.color) // ✅ stock → inStock, validar que color existe
+      .map((variant) => variant.color!); // ✅ color ya es string | undefined
 
     // Eliminar duplicados
     return [...new Set(colorsWithStock)];
@@ -69,9 +68,10 @@ export const useProductVariants = (product: Product): VariantInfo => {
 
     const variantPrices = product.variants
       .map((v) => v.price)
-      .filter((price): price is number => price !== null && price > 0);
+      .filter((price): price is number => price !== null && price !== undefined && price > 0);
 
     if (variantPrices.length === 0) return '';
+
     const minPrice =
       Math.min(...variantPrices) > product.price ? product.price : Math.min(...variantPrices);
 
@@ -79,11 +79,11 @@ export const useProductVariants = (product: Product): VariantInfo => {
 
     if (minPrice === maxPrice) return '';
 
-    return `(${minPrice} - ${maxPrice})`;
+    return `(${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)})`; // ✅ Agregar formateo
   }, [product.price, product.variants]);
 
   // Estado del inventario
-  const inventoryStatus = useMemo(() => {
+  const inventoryStatus = useMemo((): VariantInfo['inventoryStatus'] => {
     if (totalInventory === 0) return 'out-of-stock';
     if (totalInventory < 10) return 'low-stock';
     return 'in-stock';

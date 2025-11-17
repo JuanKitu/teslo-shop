@@ -5,18 +5,11 @@ import { persist } from 'zustand/middleware';
 interface CartState {
   cart: CartProduct[];
 }
-interface PropsUpdateVariant {
-  slug: string;
-  newQuantity: number;
-  size?: string;
-  color?: string;
-}
 interface Actions {
   addProductToCart: (product: CartProduct) => void;
   getTotalItems: () => number;
   updateProductQuantity: (product: CartProduct, quantity: number) => void;
-  updateProductQuantityBySlug: (slug: string, newQuantity: number) => void;
-  updateProductQuantityByVariant: (variant: PropsUpdateVariant) => void;
+  updateProductQuantityByVariantId: (variantId: string, newQuantity: number) => void; // 🆕
   removeProductFromCart: (product: CartProduct) => void;
   getSummaryInformation: () => {
     subtotal: number;
@@ -28,11 +21,14 @@ interface Actions {
 }
 
 type CartStore = CartState & Actions;
+
 const storeAPI: StateCreator<CartStore> = (set, get) => ({
   cart: [],
+
   clearCart: () => {
     set({ cart: [] });
   },
+
   getSummaryInformation: () => {
     const { cart } = get();
     const subtotal = cart.reduce((total, item) => total + item.quantity * item.price, 0);
@@ -46,58 +42,65 @@ const storeAPI: StateCreator<CartStore> = (set, get) => ({
       itemsInCart,
     };
   },
+
   removeProductFromCart: (product) => {
     const { cart } = get();
-    const updatedCart = cart.filter((item) => item.id !== product.id || item.size !== product.size);
+    // 🆕 Comparar por variantId
+    const updatedCart = cart.filter((item) => item.variantId !== product.variantId);
     set({ cart: updatedCart });
   },
+
   updateProductQuantity: (product, quantity) => {
     const { cart } = get();
     const updatedCart = cart.map((item) => {
-      if (item.id === product.id && item.size === product.size) {
-        return { ...item, quantity };
+      // 🆕 Comparar por variantId
+      if (item.variantId === product.variantId) {
+        return { ...item, quantity: Math.min(quantity, item.inStock) };
       }
       return item;
     });
     set({ cart: updatedCart });
   },
-  updateProductQuantityBySlug: (slug, newQuantity) => {
+
+  // 🆕 Nueva función más simple
+  updateProductQuantityByVariantId: (variantId, newQuantity) => {
     const { cart } = get();
     const updatedCart = cart.map((item) =>
-      item.slug === slug ? { ...item, quantity: newQuantity } : item
+      item.variantId === variantId
+        ? { ...item, quantity: Math.min(newQuantity, item.inStock) }
+        : item
     );
     set({ cart: updatedCart });
   },
-  updateProductQuantityByVariant: (variant) => {
-    const { cart } = get();
-    const updatedCart = cart.map((item) => {
-      const matchSlug = item.slug === variant.slug;
-      const matchSize = variant.size ? item.size === variant.size : true;
-      const matchColor = variant.color ? item.color === variant.color : true;
 
-      return matchSlug && matchSize && matchColor
-        ? { ...item, quantity: Math.min(variant.newQuantity, item.inStock) }
-        : item;
-    });
-    set({ cart: updatedCart });
-  },
   getTotalItems: () => {
     const { cart } = get();
     return cart.reduce((total, item) => total + item.quantity, 0);
   },
+
   addProductToCart: (product: CartProduct) => {
     const { cart } = get();
-    const productInCart = cart.some((item) => item.id === product.id && item.size === product.size);
-    if (!productInCart) {
+
+    // 🆕 Buscar por variantId
+    const existingItem = cart.find((item) => item.variantId === product.variantId);
+
+    if (!existingItem) {
       set({ cart: [...cart, product] });
       return;
     }
+
+    // Si ya existe, incrementar cantidad (respetando stock)
     const updatedCart = cart.map((item) => {
-      if (item.id === product.id && item.size === product.size) {
-        return { ...item, quantity: item.quantity + product.quantity };
+      if (item.variantId === product.variantId) {
+        const newQuantity = item.quantity + product.quantity;
+        return {
+          ...item,
+          quantity: Math.min(newQuantity, item.inStock),
+        };
       }
       return item;
     });
+
     set({ cart: updatedCart });
   },
 });

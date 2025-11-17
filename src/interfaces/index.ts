@@ -1,7 +1,6 @@
 export * from './address.interface';
 export * from './category.interface';
 export * from './country.interface';
-export * from './gender.interface';
 export * from './orders/orders-list.interface';
 export * from './orders/orders.interface';
 export * from './paypal.interface';

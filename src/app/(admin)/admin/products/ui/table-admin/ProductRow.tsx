@@ -5,7 +5,6 @@ import { ProductImage } from '@/components';
 import { currencyFormat } from '@/utils';
 import { getTableStyles } from './tableStyles';
 import { useProductVariants } from './hooks/useProductVariants';
-import { labelCategory } from './table.interface';
 import type { ProductRowProps } from './table.interface';
 
 const ProductRow = memo(({ product, isDark }: ProductRowProps) => {
@@ -14,6 +13,10 @@ const ProductRow = memo(({ product, isDark }: ProductRowProps) => {
 
   const { totalInventory, availableSizes, availableColors, priceRange, inventoryStatus } =
     useProductVariants(product);
+
+  // 🆕 Obtener categoría primaria o la primera disponible
+  const primaryCategory = product.categories?.find((pc) => pc.isPrimary)?.category;
+  const displayCategory = primaryCategory || product.categories?.[0]?.category;
 
   // Determinar color del inventario
   const getInventoryColor = () => {
@@ -65,11 +68,22 @@ const ProductRow = memo(({ product, isDark }: ProductRowProps) => {
         )}
       </td>
 
-      {/* Género */}
+      {/* 🆕 Categoría (reemplazo de Género) */}
       <td className="text-sm px-6 py-4 whitespace-nowrap">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-          {labelCategory[product.gender]}
-        </span>
+        {displayCategory ? (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            {displayCategory.name}
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400">Sin categoría</span>
+        )}
+
+        {/* Mostrar cantidad de categorías adicionales */}
+        {product.categories && product.categories.length > 1 && (
+          <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+            +{product.categories.length - 1}
+          </span>
+        )}
       </td>
 
       {/* Inventario */}

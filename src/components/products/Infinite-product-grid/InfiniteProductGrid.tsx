@@ -2,17 +2,22 @@
 
 import React, { useEffect, useRef, useState, useTransition } from 'react';
 import { ProductGrid } from '@/components';
-import { Product } from '@/interfaces';
+import type { Product } from '@/interfaces';
 import { loadMoreProducts } from '@/actions';
-import { Gender } from '@prisma/client';
 
 interface Props {
   initialProducts: Product[];
   totalPages: number;
-  gender?: Gender;
+  categorySlug?: string; // 🆕 Reemplazo de gender
+  brandSlug?: string; // 🆕 Opcional para futuro
 }
 
-export function InfiniteProductGrid({ initialProducts, totalPages, gender }: Props) {
+export function InfiniteProductGrid({
+  initialProducts,
+  totalPages,
+  categorySlug,
+  brandSlug,
+}: Props) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [page, setPage] = useState(1);
   const [isPending, startTransition] = useTransition();
@@ -25,7 +30,7 @@ export function InfiniteProductGrid({ initialProducts, totalPages, gender }: Pro
         if (first.isIntersecting && !isPending && page < totalPages) {
           startTransition(async () => {
             const nextPage = page + 1;
-            const newProducts = await loadMoreProducts(nextPage, gender);
+            const newProducts = await loadMoreProducts(nextPage, categorySlug, brandSlug);
             setProducts((prev) => [...prev, ...newProducts]);
             setPage(nextPage);
           });
@@ -40,7 +45,7 @@ export function InfiniteProductGrid({ initialProducts, totalPages, gender }: Pro
     return () => {
       if (current) observer.unobserve(current);
     };
-  }, [page, totalPages, isPending, gender]);
+  }, [page, totalPages, isPending, categorySlug, brandSlug]);
 
   return (
     <div>

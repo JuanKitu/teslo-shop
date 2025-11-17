@@ -16,6 +16,7 @@ export function PlaceOrder() {
   const [mounted, setMounted] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
   const address = useAddressStore((state) => state.address);
   const { itemsInCart, subtotal, tax, total } = useCartStore(
     useShallow((state) => state.getSummaryInformation())
@@ -34,25 +35,29 @@ export function PlaceOrder() {
 
   const onPlaceOrder = async () => {
     setIsPlacingOrder(true);
+    setErrorMessage('');
+
+    // ✅ Mapear productos con variantId
     const productOrder = cart.map((product) => ({
       productId: product.id,
+      variantId: product.variantId, // 🆕 Usar variantId del carrito
       quantity: product.quantity,
       size: product.size,
       color: product.color,
     }));
 
     const response = await placeOrder(productOrder, address);
+
     if (!response.ok) {
       setIsPlacingOrder(false);
-      setErrorMessage(response?.message);
+      setErrorMessage(response.message);
       setRefresh();
       return;
     }
+
+    // ✅ Limpiar carrito y redirigir
     clearCart();
-    if (!response?.order) {
-      router.replace(`/`);
-    }
-    router.replace(`/orders/${response.order!.id}`);
+    router.replace(`/orders/${response.orderId}`); // ✅ Usar orderId en lugar de order.id
   };
 
   if (!loaded || !mounted) {
@@ -72,9 +77,9 @@ export function PlaceOrder() {
       <div className="mb-10">
         <p className="text-xl">{`${address.firstName} ${address.lastName}`}</p>
         <p>{address.address}</p>
-        <p>{address.address2}</p>
+        {address.address2 && <p>{address.address2}</p>}
         <p>Código postal: {address.postalCode}</p>
-        <p>{`${address.city} ${address.country}`}</p>
+        <p>{`${address.city}, ${address.country}`}</p>
         <p>{address.phone}</p>
       </div>
 
@@ -86,7 +91,7 @@ export function PlaceOrder() {
       />
 
       <h2 className="text-2xl mb-2">Resumen de orden</h2>
-      <div className="grid grid-cols-2">
+      <div className="grid grid-cols-2 gap-2">
         <span>Nro. Productos</span>
         <span className="text-right">
           {itemsInCart === 1 ? '1 artículo' : `${itemsInCart} artículos`}
@@ -95,24 +100,27 @@ export function PlaceOrder() {
         <span>Subtotal</span>
         <span className="text-right">{currencyFormat(subtotal)}</span>
 
-        <span>Impuestos (%15)</span>
+        <span>Impuestos (15%)</span>
         <span className="text-right">{currencyFormat(tax)}</span>
 
-        <span className="mt-5 text-2xl">Total:</span>
-        <span className="mt-5 text-2xl text-right">{currencyFormat(total)}</span>
+        <span className="mt-5 text-2xl font-bold">Total:</span>
+        <span className="mt-5 text-2xl font-bold text-right">{currencyFormat(total)}</span>
       </div>
 
       <div className="mt-5 mb-2 w-full">
         <button
           onClick={onPlaceOrder}
           disabled={isPlacingOrder}
-          className={clsx('flex justify-center w-full py-2 rounded transition-all', {
-            'bg-blue-600 text-white hover:bg-blue-700': !isPlacingOrder && !isDark,
-            'bg-blue-500 text-white hover:bg-blue-600': !isPlacingOrder && isDark,
-            'opacity-50 cursor-not-allowed': isPlacingOrder,
-          })}
+          className={clsx(
+            'flex justify-center w-full py-3 rounded-lg font-semibold transition-all',
+            {
+              'bg-blue-600 text-white hover:bg-blue-700': !isPlacingOrder && !isDark,
+              'bg-blue-500 text-white hover:bg-blue-600': !isPlacingOrder && isDark,
+              'opacity-50 cursor-not-allowed bg-gray-400': isPlacingOrder,
+            }
+          )}
         >
-          Colocar orden
+          {isPlacingOrder ? 'Procesando...' : 'Colocar orden'}
         </button>
       </div>
 

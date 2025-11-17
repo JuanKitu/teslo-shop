@@ -1,17 +1,5 @@
-import type { Gender } from '@/interfaces';
 import type { VariantInput } from './product-form.interface';
 
-export const GENDERS: Gender[] = [
-  { id: 'men', name: 'Hombre' },
-  { id: 'women', name: 'Mujer' },
-  { id: 'kid', name: 'Niño' },
-  { id: 'unisex', name: 'Unisex' },
-];
-
-// ✅ Sin 'as const' para que sea mutable
-export const VALID_SIZES: string[] = ['GENERIC', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
-
-// O si prefieres con objetos (mejor opción)
 export const SIZE_OPTIONS = [
   { value: 'GENERIC', label: 'Genérico' },
   { value: 'XS', label: 'XS' },

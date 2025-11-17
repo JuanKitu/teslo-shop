@@ -8,6 +8,7 @@ export default async function Home() {
     page: 1,
     take: 12,
   });
+
   return (
     <>
       <Title title="Tienda" subtitle="Todos los productos" className="mb-2" />

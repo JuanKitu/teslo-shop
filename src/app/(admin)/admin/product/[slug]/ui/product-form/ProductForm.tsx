@@ -9,13 +9,14 @@ import { VariantsSection } from './components/VariantsSection';
 import { getFormStyles } from './styles';
 import type { ProductFormProps } from './product-form.interface';
 
-export function ProductForm({ product = {}, categories }: ProductFormProps) {
+export function ProductForm({ product, categories, brands }: ProductFormProps) {
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
 
   const { form, variantsArray, combinedImages, errorMessage, onSubmit, setValue } = useProductForm({
     product,
     categories,
+    brands,
   });
 
   const {
@@ -50,7 +51,9 @@ export function ProductForm({ product = {}, categories }: ProductFormProps) {
       <ProductInfoSection
         register={register}
         errors={errors}
+        control={control} // 🆕 Pasar control para Controller
         categories={categories}
+        brands={brands} // 🆕 Pasar brands
         isValid={isValid}
         errorMessage={errorMessage}
         isDark={isDark}
@@ -60,7 +63,7 @@ export function ProductForm({ product = {}, categories }: ProductFormProps) {
       <div className="flex flex-col gap-6">
         {/* Imágenes */}
         <ImageUploader
-          initialImages={product.ProductImage}
+          initialImages={product?.images} // ✅ ProductImage → images
           onChange={(urls) => setValue('images', urls)}
         />
 

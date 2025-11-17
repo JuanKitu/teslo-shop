@@ -1,8 +1,14 @@
-import type { ProductImage as IProductImage } from '@/interfaces';
-import { DropzoneInputProps, DropzoneRootProps } from 'react-dropzone';
+import type { DropzoneInputProps, DropzoneRootProps } from 'react-dropzone';
+import { ProductImage } from '@/interfaces';
+
+// 🆕 Tipo flexible para imágenes iniciales
+export type InitialImage =
+  | string // URLs simples
+  | { url: string } // Objeto mínimo
+  | ProductImage;
 
 export interface ImageUploaderProps {
-  initialImages?: IProductImage[];
+  initialImages?: InitialImage[]; // ✅ Acepta múltiples formatos
   onChange: (urls: string[]) => void;
   maxImages?: number;
 }

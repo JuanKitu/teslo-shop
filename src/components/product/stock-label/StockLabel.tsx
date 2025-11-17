@@ -6,7 +6,7 @@ import { useProductSelectionStore } from '@/store';
 export function StockLabel() {
   const { selectedVariant } = useProductSelectionStore();
 
-  const stock = selectedVariant?.stock ?? 0;
+  const stock = selectedVariant?.inStock ?? 0;
 
   return (
     <div className="h-6 flex items-center">

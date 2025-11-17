@@ -9,13 +9,14 @@ import { titleFont } from '@/app/config/fonts';
 import { useCartStore, useUiStore, useFavoriteStore } from '@/store';
 import { SearchBar } from '@/components';
 
-const categories = [
-  { name: 'Hombres', url: '/gender/men' },
-  { name: 'Mujeres', url: '/gender/women' },
-  { name: 'Niños', url: '/gender/kid' },
-];
+interface Props {
+  categories: Array<{
+    name: string;
+    slug: string;
+  }>;
+}
 
-export function TopMenu() {
+export function TopMenu({ categories }: Props) {
   const openMenu = useUiStore((state) => state.openSideMenu);
   const getTotalItems = useCartStore((state) => state.getTotalItems());
   const { favorites } = useFavoriteStore();
@@ -84,16 +85,16 @@ export function TopMenu() {
 
       {/* Fila inferior: Categorías y búsqueda mobile */}
       <div className="flex items-center justify-between gap-4">
-        {/* Categorías */}
+        {/* Categorías dinámicas */}
         <div className="hidden sm:flex gap-2">
           {categories.map((category) => (
             <Link
-              key={category.url}
+              key={category.slug}
               className={clsx(
                 'px-3 py-1.5 rounded-md transition-all text-sm',
                 isDark ? 'hover:bg-[#222]' : 'hover:bg-gray-100'
               )}
-              href={category.url}
+              href={`/category/${category.slug}`}
             >
               {category.name}
             </Link>

@@ -1,23 +1,44 @@
-import type { Order, OrderAddress } from '@prisma/client';
-
-export interface OrderProduct {
+export interface OrderItemProduct {
   id: string;
   title: string;
   slug: string;
-  image: string; // imagen principal o de la variante
-  color?: string;
-  size?: string;
+  image: string;
+  color: string;
+  size: string;
 }
 
-export interface OrderItemWithProduct {
+export interface OrderItemDetail {
   price: number;
   quantity: number;
-  product: OrderProduct;
+  product: OrderItemProduct;
 }
 
-export interface OrderWithDetails extends Order {
+export interface OrderAddress {
+  id: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  address2: string | null;
+  postalCode: string;
+  city: string;
+  phone: string;
+  countryId: string;
+}
+
+export interface OrderWithDetails {
+  id: string;
+  subTotal: number;
+  tax: number;
+  total: number;
+  itemsInOrder: number;
+  isPaid: boolean;
+  paidAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  transactionId: string | null;
   OrderAddress: OrderAddress | null;
-  OrderItem: OrderItemWithProduct[];
+  OrderItem: OrderItemDetail[];
 }
 
 export interface GetOrderResult {

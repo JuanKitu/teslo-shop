@@ -1,19 +1,22 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { Gender } from '@prisma/client';
 import type { Product } from '@/interfaces';
+import { mapPrismaVariants } from '@/utils';
+import { Prisma } from '@prisma/client';
 
 interface PaginationOptions {
   page?: number;
   take?: number;
-  gender?: Gender;
+  categorySlug?: string;
+  brandSlug?: string;
 }
 
 export const getPaginatedProductsWithImages = async ({
   page = 1,
   take = 12,
-  gender,
+  categorySlug,
+  brandSlug,
 }: PaginationOptions): Promise<{
   currentPage: number;
   totalPages: number;
@@ -22,31 +25,97 @@ export const getPaginatedProductsWithImages = async ({
   if (isNaN(Number(page)) || page < 1) page = 1;
 
   try {
+    // 🔍 Construir filtros dinámicos usando tipo de Prisma
+    const where: Prisma.ProductWhereInput = {
+      isActive: true,
+      deletedAt: null,
+    };
+
+    // Filtrar por categoría
+    if (categorySlug) {
+      where.categories = {
+        some: {
+          category: {
+            slug: categorySlug,
+            isActive: true,
+            deletedAt: null,
+          },
+        },
+      };
+    }
+
+    // Filtrar por marca
+    if (brandSlug) {
+      where.brands = {
+        some: {
+          brand: {
+            slug: brandSlug,
+            isActive: true,
+            deletedAt: null,
+          },
+        },
+      };
+    }
+
+    // 📊 Query optimizada con include completo
     const [products, totalCount] = await Promise.all([
       prisma.product.findMany({
         take,
         skip: (page - 1) * take,
-        where: { gender },
+        where,
         include: {
-          images: { select: { url: true } },
+          images: {
+            select: { url: true, alt: true },
+            orderBy: { order: 'asc' },
+          },
           variants: {
+            where: {
+              isActive: true,
+              deletedAt: null,
+            },
             include: {
-              images: { select: { url: true } },
+              images: {
+                select: { url: true, alt: true },
+                orderBy: { order: 'asc' },
+              },
+              optionValues: {
+                include: {
+                  option: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
         orderBy: { title: 'asc' },
       }),
-      prisma.product.count({ where: { gender } }),
+      prisma.product.count({ where }),
     ]);
 
     const totalPages = Math.ceil(totalCount / take);
 
-    // 🧠 Transformar productos al formato frontend actualizado
+    // 🧠 Transformar usando las utilidades de mapeo
     const formattedProducts: Product[] = products.map((product) => {
-      const allImages = [
-        ...product.images.map((img) => img.url),
-        ...product.variants.flatMap((v) => v.images.map((img) => img.url)),
+      // Mapear variantes de Prisma usando la utilidad
+      const mappedVariants = mapPrismaVariants(product.variants);
+
+      // Recolectar todas las imágenes únicas
+      const productImages = product.images.map((img) => img.url);
+      const variantImages = product.variants.flatMap((v) => v.images.map((img) => img.url));
+      const allImages = Array.from(new Set([...productImages, ...variantImages]));
+
+      // Extraer colores y tallas disponibles
+      const availableColors = [
+        ...new Set(mappedVariants.filter((v) => v.color && v.inStock > 0).map((v) => v.color!)),
+      ];
+
+      const availableSizes = [
+        ...new Set(mappedVariants.filter((v) => v.size && v.inStock > 0).map((v) => v.size!)),
       ];
 
       return {
@@ -56,15 +125,17 @@ export const getPaginatedProductsWithImages = async ({
         price: product.price,
         slug: product.slug,
         tags: product.tags,
-        gender: product.gender,
-        images: Array.from(new Set(allImages)),
-        variants: product.variants.map((v) => ({
-          color: v.color ?? '',
-          size: v.size ?? 'GENERIC',
-          stock: v.inStock ?? 0,
-          price: v.price,
-          images: v.images.map((img) => img.url),
-        })),
+        images: allImages.length > 0 ? allImages : ['/placeholder.png'],
+
+        // Stock total (suma de todas las variantes)
+        inStock: mappedVariants.reduce((acc, v) => acc + v.inStock, 0),
+
+        // Variantes mapeadas
+        variants: mappedVariants,
+
+        // Colores y tallas disponibles
+        availableColors,
+        availableSizes,
       };
     });
 

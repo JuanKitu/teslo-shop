@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 
 export const getFormStyles = (isDark: boolean) => ({
-  container: 'grid grid-cols-1 lg:grid-cols-2 gap-6 px-5 sm:px-0 mb-20',
+  container: 'grid grid-cols-1 lg:grid-cols-2 gap-6 px-5 sm:px-0 mb-20 items-start',
 
   card: clsx(
     'rounded-2xl shadow-lg p-6 border transition-colors',

@@ -27,11 +27,22 @@ export function ProductImage({
     setMounted(true);
   }, []);
 
-  const localSrc = src
-    ? src.startsWith('http')
-      ? src
-      : `/products/${src}`
-    : '/imgs/placeholder.jpg';
+  // ✅ FIX: Verificar si ya tiene /products/ o si es URL externa
+  const localSrc = (() => {
+    if (!src) return '/imgs/placeholder.jpg';
+
+    // Si ya es URL completa (http/https), usar directo
+    if (src.startsWith('http')) return src;
+
+    // Si ya empieza con /products/, usar directo
+    if (src.startsWith('/products/')) return src;
+
+    // Si empieza con /, usar directo (ruta absoluta)
+    if (src.startsWith('/')) return src;
+
+    // Si no, agregar prefijo /products/
+    return `/products/${src}`;
+  })();
 
   const isDark = mounted && theme === 'dark';
 

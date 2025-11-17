@@ -1,13 +1,14 @@
 'use server';
 
 import { getPaginatedProductsWithImages } from '@/actions';
-import { Gender } from '@prisma/client';
 
-export async function loadMoreProducts(page: number, gender?: Gender) {
+export async function loadMoreProducts(page: number, categorySlug?: string, brandSlug?: string) {
   const { products } = await getPaginatedProductsWithImages({
     page,
     take: 12,
-    gender,
+    categorySlug,
+    brandSlug,
   });
+
   return products;
 }

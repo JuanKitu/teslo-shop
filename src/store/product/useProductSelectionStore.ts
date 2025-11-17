@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { StateCreator } from 'zustand';
-import { ProductVariant } from '@/interfaces';
+import type { StateCreator } from 'zustand';
+import type { ProductVariant } from '@/interfaces';
 
 interface ProductSelectionState {
   selectedVariant?: ProductVariant;
@@ -10,6 +10,8 @@ interface ProductSelectionState {
 interface Actions {
   setVariant: (variant?: ProductVariant) => void;
   setQuantity: (quantity: number) => void;
+  incrementQuantity: () => void;
+  decrementQuantity: () => void;
   reset: () => void;
 }
 
@@ -22,10 +24,47 @@ const storeAPI: StateCreator<ProductSelectionStore> = (set) => ({
   setVariant: (variant) =>
     set((state) => ({
       selectedVariant: variant,
-      quantity: variant ? Math.min(state.quantity, variant.stock) : 1,
+      // ✅ stock → inStock
+      quantity: variant ? Math.min(state.quantity, variant.inStock) : 1,
     })),
-  setQuantity: (quantity) => set({ quantity }),
-  reset: () => set({ selectedVariant: undefined }),
+
+  setQuantity: (quantity) =>
+    set((state) => {
+      const { selectedVariant } = state;
+
+      // Validar que no exceda el stock disponible
+      if (selectedVariant) {
+        const maxQuantity = selectedVariant.inStock; // ✅ stock → inStock
+        return { quantity: Math.min(Math.max(1, quantity), maxQuantity) };
+      }
+
+      return { quantity: Math.max(1, quantity) };
+    }),
+
+  incrementQuantity: () =>
+    set((state) => {
+      const { selectedVariant, quantity } = state;
+
+      if (selectedVariant && quantity < selectedVariant.inStock) {
+        // ✅ stock → inStock
+        return { quantity: quantity + 1 };
+      }
+
+      return state;
+    }),
+
+  decrementQuantity: () =>
+    set((state) => {
+      const { quantity } = state;
+
+      if (quantity > 1) {
+        return { quantity: quantity - 1 };
+      }
+
+      return state;
+    }),
+
+  reset: () => set({ selectedVariant: undefined, quantity: 1 }), // ✅ Reset también quantity
 });
 
 export const useProductSelectionStore = create<ProductSelectionStore>()(storeAPI);

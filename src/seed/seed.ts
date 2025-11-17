@@ -1,5 +1,6 @@
 //seed.ts
 import bcryptjs from 'bcryptjs';
+
 interface SeedProduct {
   description: string;
   images: string[];
@@ -7,19 +8,24 @@ interface SeedProduct {
   slug: string;
   tags: string[];
   title: string;
-  type: ValidTypes;
-  gender: 'men' | 'women' | 'kid' | 'unisex';
+  categories: string[]; // 🆕 Array de slugs de categorías ['men', 'shirts']
+  brand?: string;
   variants: ProductVariant[];
+  attributes?: {
+    material?: string;
+    weight?: string;
+    care?: string;
+  };
 }
 
 interface ProductVariant {
   color: string;
-  stockBySize: Partial<Record<ValidSizes, number>>; // <-- ahora es opcional
+  stockBySize: Partial<Record<ValidSizes, number>>;
   images: string[];
+  sku?: string;
 }
 
-type ValidSizes = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | 'GENERIC';
-type ValidTypes = 'shirts' | 'pants' | 'hoodies' | 'hats';
+type ValidSizes = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
 
 interface SeedUser {
   email: string;
@@ -27,9 +33,26 @@ interface SeedUser {
   name: string;
   role: 'admin' | 'user';
 }
+
+interface SeedCategory {
+  name: string;
+  slug: string;
+  description?: string;
+  parentSlug?: string;
+  isFeatured?: boolean;
+}
+
+interface SeedBrand {
+  name: string;
+  slug: string;
+  description?: string;
+  type?: string;
+}
+
 interface SeedData {
   users: SeedUser[];
-  categories: string[];
+  categories: SeedCategory[];
+  brands: SeedBrand[];
   products: SeedProduct[];
 }
 
@@ -48,41 +71,83 @@ export const initialData: SeedData = {
       role: 'user',
     },
   ],
-  categories: ['Shirts', 'Pants', 'Hoodies', 'Hats'],
+
+  // 🆕 Categorías con jerarquía de género
+  categories: [
+    // === NIVEL 1: GÉNERO ===
+    { name: 'Men', slug: 'men', description: "Men's products", isFeatured: true },
+    { name: 'Women', slug: 'women', description: "Women's products", isFeatured: true },
+    { name: 'Kids', slug: 'kids', description: 'Kids products', isFeatured: true },
+    { name: 'Unisex', slug: 'unisex', description: 'Unisex products', isFeatured: true },
+
+    // === NIVEL 2: TIPO DE PRODUCTO (bajo Men) ===
+    { name: "Men's Shirts", slug: 'men-shirts', parentSlug: 'men' },
+    { name: "Men's Hoodies", slug: 'men-hoodies', parentSlug: 'men' },
+    { name: "Men's Hats", slug: 'men-hats', parentSlug: 'men' },
+
+    // === NIVEL 2: TIPO DE PRODUCTO (bajo Women) ===
+    { name: "Women's Shirts", slug: 'women-shirts', parentSlug: 'women' },
+    { name: "Women's Hoodies", slug: 'women-hoodies', parentSlug: 'women' },
+    { name: "Women's Hats", slug: 'women-hats', parentSlug: 'women' },
+
+    // === NIVEL 2: TIPO DE PRODUCTO (bajo Kids) ===
+    { name: 'Kids Shirts', slug: 'kids-shirts', parentSlug: 'kids' },
+    { name: 'Kids Jackets', slug: 'kids-jackets', parentSlug: 'kids' },
+
+    // === NIVEL 2: TIPO DE PRODUCTO (bajo Unisex) ===
+    { name: 'Unisex Hoodies', slug: 'unisex-hoodies', parentSlug: 'unisex' },
+    { name: 'Unisex Hats', slug: 'unisex-hats', parentSlug: 'unisex' },
+  ],
+
+  brands: [
+    { name: 'Tesla', slug: 'tesla', description: 'Official Tesla merchandise', type: 'brand' },
+    {
+      name: 'Chill Collection',
+      slug: 'chill-collection',
+      description: 'Premium, heavyweight exterior with soft fleece interior',
+      type: 'collection',
+    },
+    {
+      name: 'Raven Collection',
+      slug: 'raven-collection',
+      description: 'Sustainable bamboo cotton blend collection',
+      type: 'collection',
+    },
+    {
+      name: 'Turbine Collection',
+      slug: 'turbine-collection',
+      description: 'Lightweight everyday lifestyle collection',
+      type: 'collection',
+    },
+    {
+      name: 'Cybertruck',
+      slug: 'cybertruck',
+      description: 'Cybertruck-themed merchandise',
+      type: 'line',
+    },
+  ],
+
   products: [
     {
-      title: 'Men’s Chill Crew Neck Sweatshirt',
+      title: "Men's Chill Crew Neck Sweatshirt",
       description:
-        'Introducing the Tesla Chill Collection. The Men’s Chill Crew Neck Sweatshirt has a premium, heavyweight exterior and soft fleece interior for comfort in any season. The sweatshirt features a subtle thermoplastic polyurethane T logo on the chest and a Tesla wordmark below the back collar. Made from 60% cotton and 40% recycled polyester.',
+        "Introducing the Tesla Chill Collection. The Men's Chill Crew Neck Sweatshirt has a premium, heavyweight exterior and soft fleece interior for comfort in any season. The sweatshirt features a subtle thermoplastic polyurethane T logo on the chest and a Tesla wordmark below the back collar. Made from 60% cotton and 40% recycled polyester.",
       images: ['1740176-00-A_0_2000.jpg', '1740176-00-A_1.jpg'],
       price: 75,
       slug: 'mens_chill_crew_neck_sweatshirt',
-      type: 'shirts',
-      tags: ['sweatshirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'], // 🆕
+      tags: ['sweatshirt', 'chill', 'crew neck'],
+      brand: 'chill-collection',
+      attributes: { material: '60% cotton and 40% recycled polyester' },
       variants: [
         {
           color: 'Black',
-          stockBySize: {
-            XS: 5,
-            S: 17,
-            M: 0,
-            L: 15,
-            XL: 2,
-            XXL: 11,
-          },
+          stockBySize: { XS: 5, S: 17, M: 0, L: 15, XL: 2, XXL: 11 },
           images: ['1740176-00-A_0_2000.jpg', '1740176-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 1,
-            S: 10,
-            M: 6,
-            L: 13,
-            XL: 4,
-            XXL: 2,
-          },
+          stockBySize: { XS: 1, S: 10, M: 6, L: 13, XL: 4, XXL: 2 },
           images: ['1740176-00-A_0_2000.jpg', '1740176-00-A_1.jpg'],
         },
       ],
@@ -94,30 +159,19 @@ export const initialData: SeedData = {
       images: ['1740507-00-A_0_2000.jpg', '1740507-00-A_1.jpg'],
       price: 200,
       slug: 'men_quilted_shirt_jacket',
-      type: 'shirts',
-      tags: ['jacket'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['jacket', 'quilted', 'winter'],
+      brand: 'tesla',
+      attributes: { material: '87% nylon and 13% polyurethane' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XS: 12,
-            S: 13,
-            M: 6,
-            XL: 10,
-            XXL: 2,
-          },
+          stockBySize: { XS: 12, S: 13, M: 6, XL: 10, XXL: 2 },
           images: ['1740507-00-A_0_2000.jpg', '1740507-00-A_1.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            XS: 4,
-            S: 16,
-            M: 1,
-            XL: 19,
-            XXL: 4,
-          },
+          stockBySize: { XS: 4, S: 16, M: 1, XL: 19, XXL: 4 },
           images: ['1740507-00-A_0_2000.jpg', '1740507-00-A_1.jpg'],
         },
       ],
@@ -129,30 +183,19 @@ export const initialData: SeedData = {
       images: ['1740250-00-A_0_2000.jpg', '1740250-00-A_1.jpg'],
       price: 130,
       slug: 'men_raven_lightweight_zip_up_bomber_jacket',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['bomber', 'raven', 'sustainable'],
+      brand: 'raven-collection',
+      attributes: { material: '70% bamboo and 30% cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            S: 2,
-            M: 4,
-            L: 13,
-            XL: 5,
-            XXL: 15,
-          },
+          stockBySize: { S: 2, M: 4, L: 13, XL: 5, XXL: 15 },
           images: ['1740250-00-A_0_2000.jpg', '1740250-00-A_1.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            S: 17,
-            M: 10,
-            L: 9,
-            XL: 6,
-            XXL: 7,
-          },
+          stockBySize: { S: 17, M: 10, L: 9, XL: 6, XXL: 7 },
           images: ['1740250-00-A_0_2000.jpg', '1740250-00-A_1.jpg'],
         },
       ],
@@ -164,28 +207,19 @@ export const initialData: SeedData = {
       images: ['1740280-00-A_0_2000.jpg', '1740280-00-A_1.jpg'],
       price: 45,
       slug: 'men_turbine_long_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['long sleeve', 'turbine', 'casual'],
+      brand: 'turbine-collection',
+      attributes: { material: '50% cotton and 50% polyester' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 1,
-            S: 8,
-            M: 16,
-            L: 13,
-          },
+          stockBySize: { XS: 1, S: 8, M: 16, L: 13 },
           images: ['1740280-00-A_0_2000.jpg', '1740280-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 9,
-            S: 16,
-            M: 7,
-            L: 1,
-          },
+          stockBySize: { XS: 9, S: 16, M: 7, L: 1 },
           images: ['1740280-00-A_0_2000.jpg', '1740280-00-A_1.jpg'],
         },
       ],
@@ -197,28 +231,19 @@ export const initialData: SeedData = {
       images: ['1741416-00-A_0_2000.jpg', '1741416-00-A_1.jpg'],
       price: 40,
       slug: 'men_turbine_short_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'turbine'],
+      brand: 'turbine-collection',
+      attributes: { material: '50% cotton and 50% polyester' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            M: 15,
-            L: 10,
-            XL: 6,
-            XXL: 11,
-          },
+          stockBySize: { M: 15, L: 10, XL: 6, XXL: 11 },
           images: ['1741416-00-A_0_2000.jpg', '1741416-00-A_1.jpg'],
         },
         {
           color: 'Green',
-          stockBySize: {
-            M: 14,
-            L: 8,
-            XL: 6,
-            XXL: 9,
-          },
+          stockBySize: { M: 14, L: 8, XL: 6, XXL: 9 },
           images: ['1741416-00-A_0_2000.jpg', '1741416-00-A_1.jpg'],
         },
       ],
@@ -230,28 +255,19 @@ export const initialData: SeedData = {
       images: ['7654393-00-A_2_2000.jpg', '7654393-00-A_3.jpg'],
       price: 35,
       slug: 'men_cybertruck_owl_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'cybertruck'],
+      brand: 'cybertruck',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Black',
-          stockBySize: {
-            M: 18,
-            L: 13,
-            XL: 2,
-            XXL: 15,
-          },
+          stockBySize: { M: 18, L: 13, XL: 2, XXL: 15 },
           images: ['7654393-00-A_2_2000.jpg', '7654393-00-A_3.jpg'],
         },
         {
           color: 'Green',
-          stockBySize: {
-            M: 7,
-            L: 18,
-            XL: 15,
-            XXL: 11,
-          },
+          stockBySize: { M: 7, L: 18, XL: 15, XXL: 11 },
           images: ['7654393-00-A_2_2000.jpg', '7654393-00-A_3.jpg'],
         },
       ],
@@ -263,28 +279,19 @@ export const initialData: SeedData = {
       images: ['1703767-00-A_0_2000.jpg', '1703767-00-A_1.jpg'],
       price: 35,
       slug: 'men_solar_roof_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'solar'],
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Black',
-          stockBySize: {
-            S: 10,
-            M: 16,
-            L: 8,
-            XL: 6,
-          },
+          stockBySize: { S: 10, M: 16, L: 8, XL: 6 },
           images: ['1703767-00-A_0_2000.jpg', '1703767-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            S: 6,
-            M: 3,
-            L: 11,
-            XL: 10,
-          },
+          stockBySize: { S: 6, M: 3, L: 11, XL: 10 },
           images: ['1703767-00-A_0_2000.jpg', '1703767-00-A_1.jpg'],
         },
       ],
@@ -292,32 +299,23 @@ export const initialData: SeedData = {
     {
       title: "Men's Let the Sun Shine Tee",
       description:
-        "Inspired by the world’s most unlimited resource, the Let the Sun Shine Tee highlights our fully integrated home solar and storage system. Designed for fit, comfort and style, the tee features a sunset graphic along with our Tesla wordmark on the front and our signature T logo printed above 'Solar Roof' on the back. Made from 100% Peruvian cotton.",
+        "Inspired by the world's most unlimited resource, the Let the Sun Shine Tee highlights our fully integrated home solar and storage system. Designed for fit, comfort and style, the tee features a sunset graphic along with our Tesla wordmark on the front and our signature T logo printed above 'Solar Roof' on the back. Made from 100% Peruvian cotton.",
       images: ['1700280-00-A_0_2000.jpg', '1700280-00-A_1.jpg'],
       price: 35,
       slug: 'men_let_the_sun_shine_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'solar'],
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XS: 2,
-            S: 2,
-            XL: 18,
-            XXL: 8,
-          },
+          stockBySize: { XS: 2, S: 2, XL: 18, XXL: 8 },
           images: ['1700280-00-A_0_2000.jpg', '1700280-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 7,
-            S: 9,
-            XL: 18,
-            XXL: 16,
-          },
+          stockBySize: { XS: 7, S: 9, XL: 18, XXL: 16 },
           images: ['1700280-00-A_0_2000.jpg', '1700280-00-A_1.jpg'],
         },
       ],
@@ -329,26 +327,19 @@ export const initialData: SeedData = {
       images: ['8764734-00-A_0_2000.jpg', '8764734-00-A_1.jpg'],
       price: 35,
       slug: 'men_3d_large_wordmark_tee',
-      type: 'shirts',
+      categories: ['men', 'men-shirts'],
       tags: ['shirt'],
-      gender: 'men',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XS: 9,
-            S: 10,
-            M: 3,
-          },
+          stockBySize: { XS: 9, S: 10, M: 3 },
           images: ['8764734-00-A_0_2000.jpg', '8764734-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 14,
-            S: 17,
-            M: 13,
-          },
+          stockBySize: { XS: 14, S: 17, M: 13 },
           images: ['8764734-00-A_0_2000.jpg', '8764734-00-A_1.jpg'],
         },
       ],
@@ -360,55 +351,43 @@ export const initialData: SeedData = {
       images: ['7652426-00-A_0_2000.jpg', '7652426-00-A_1.jpg'],
       price: 35,
       slug: 'men_3d_t_logo_tee',
-      type: 'shirts',
+      categories: ['men', 'men-shirts'],
       tags: ['shirt'],
-      gender: 'men',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 19,
-            S: 16,
-          },
+          stockBySize: { XS: 19, S: 16 },
           images: ['7652426-00-A_0_2000.jpg', '7652426-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 10,
-            S: 10,
-          },
+          stockBySize: { XS: 10, S: 10 },
           images: ['7652426-00-A_0_2000.jpg', '7652426-00-A_1.jpg'],
         },
       ],
     },
     {
-      title: 'Men’s 3D Small Wordmark Tee',
+      title: "Men's 3D Small Wordmark Tee",
       description:
         'Designed for comfort and style in any size, the Tesla Small Wordmark Tee is made from 100% Peruvian cotton and features a 3D silicone-printed wordmark on the left chest.',
       images: ['8528839-00-A_0_2000.jpg', '8528839-00-A_2.jpg'],
       price: 35,
       slug: 'men_3d_small_wordmark_tee',
-      type: 'shirts',
+      categories: ['men', 'men-shirts'],
       tags: ['shirt'],
-      gender: 'men',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 6,
-            S: 19,
-            M: 17,
-          },
+          stockBySize: { XS: 6, S: 19, M: 17 },
           images: ['8528839-00-A_0_2000.jpg', '8528839-00-A_2.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 16,
-            S: 10,
-            M: 15,
-          },
+          stockBySize: { XS: 16, S: 10, M: 15 },
           images: ['8528839-00-A_0_2000.jpg', '8528839-00-A_2.jpg'],
         },
       ],
@@ -420,32 +399,19 @@ export const initialData: SeedData = {
       images: ['1549268-00-A_0_2000.jpg', '1549268-00-A_2.jpg'],
       price: 35,
       slug: 'men_plaid_mode_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'plaid'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 1,
-            S: 3,
-            M: 5,
-            L: 19,
-            XL: 3,
-            XXL: 13,
-          },
+          stockBySize: { XS: 1, S: 3, M: 5, L: 19, XL: 3, XXL: 13 },
           images: ['1549268-00-A_0_2000.jpg', '1549268-00-A_2.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            XS: 9,
-            S: 11,
-            M: 14,
-            L: 7,
-            XL: 16,
-            XXL: 3,
-          },
+          stockBySize: { XS: 9, S: 11, M: 14, L: 7, XL: 16, XXL: 3 },
           images: ['1549268-00-A_0_2000.jpg', '1549268-00-A_2.jpg'],
         },
       ],
@@ -457,84 +423,67 @@ export const initialData: SeedData = {
       images: ['9877034-00-A_0_2000.jpg', '9877034-00-A_2.jpg'],
       price: 35,
       slug: 'men_powerwall_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'powerwall'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XL: 0,
-            XXL: 12,
-          },
+          stockBySize: { XL: 0, XXL: 12 },
           images: ['9877034-00-A_0_2000.jpg', '9877034-00-A_2.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XL: 15,
-            XXL: 3,
-          },
+          stockBySize: { XL: 15, XXL: 3 },
           images: ['9877034-00-A_0_2000.jpg', '9877034-00-A_2.jpg'],
         },
       ],
     },
     {
-      title: "Men's Battery Day Tee",
+      title: "Men\'s Battery Day Tee",
       description:
         'Inspired by Tesla Battery Day and featuring the unveiled tabless battery cell, Battery Day Tee celebrates the future of energy storage and cell manufacturing. Designed for fit, comfort and style, Battery Day Tee is made from 100% cotton with a stylized cell printed across the chest. Made in Peru.',
       images: ['1633802-00-A_0_2000.jpg', '1633802-00-A_2.jpg'],
       price: 30,
       slug: 'men_battery_day_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'battery'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 6,
-            S: 17,
-            XXL: 18,
-          },
+          stockBySize: { XS: 6, S: 17, XXL: 18 },
           images: ['1633802-00-A_0_2000.jpg', '1633802-00-A_2.jpg'],
         },
         {
           color: 'Red',
-          stockBySize: {
-            XS: 8,
-            S: 17,
-            XXL: 19,
-          },
+          stockBySize: { XS: 8, S: 17, XXL: 19 },
           images: ['1633802-00-A_0_2000.jpg', '1633802-00-A_2.jpg'],
         },
       ],
     },
     {
-      title: 'Men’s Cybertruck Bulletproof Tee',
+      title: "Men's Cybertruck Bulletproof Tee",
       description:
         'Designed for exceptional comfort and inspired by the Cybertruck unveil event, the Cybertruck Bulletproof Tee is made from 100% cotton and features our signature Cybertruck icon on the back.',
       images: ['7654399-00-A_0_2000.jpg', '7654399-00-A_1.jpg'],
       price: 30,
       slug: 'men_cybertruck_bulletproof_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'cybertruck'],
+      brand: 'cybertruck',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            M: 16,
-            L: 7,
-          },
+          stockBySize: { M: 16, L: 7 },
           images: ['7654399-00-A_0_2000.jpg', '7654399-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            M: 7,
-            L: 19,
-          },
+          stockBySize: { M: 7, L: 19 },
           images: ['7654399-00-A_0_2000.jpg', '7654399-00-A_1.jpg'],
         },
       ],
@@ -546,32 +495,19 @@ export const initialData: SeedData = {
       images: ['7652410-00-A_0.jpg', '7652410-00-A_1_2000.jpg'],
       price: 35,
       slug: 'men_haha_yes_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'limited edition'],
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XS: 18,
-            S: 17,
-            M: 18,
-            L: 3,
-            XL: 0,
-            XXL: 12,
-          },
+          stockBySize: { XS: 18, S: 17, M: 18, L: 3, XL: 0, XXL: 12 },
           images: ['7652410-00-A_0.jpg', '7652410-00-A_1_2000.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 13,
-            S: 13,
-            M: 0,
-            L: 13,
-            XL: 0,
-            XXL: 2,
-          },
+          stockBySize: { XS: 13, S: 13, M: 0, L: 13, XL: 0, XXL: 2 },
           images: ['7652410-00-A_0.jpg', '7652410-00-A_1_2000.jpg'],
         },
       ],
@@ -579,32 +515,23 @@ export const initialData: SeedData = {
     {
       title: "Men's S3XY Tee",
       description:
-        'Designed for fit, comfort and style, the limited edition S3XY Tee is made from 100% cotton with a 3D silicone-printed “S3XY” logo across the chest. Made in Peru. Available in black.',
+        'Designed for fit, comfort and style, the limited edition S3XY Tee is made from 100% cotton with a 3D silicone-printed "S3XY" logo across the chest. Made in Peru.',
       images: ['8764600-00-A_0_2000.jpg', '8764600-00-A_2.jpg'],
       price: 35,
       slug: 'men_s3xy_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'limited edition'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 15,
-            S: 11,
-            M: 18,
-            L: 5,
-          },
+          stockBySize: { XS: 15, S: 11, M: 18, L: 5 },
           images: ['8764600-00-A_0_2000.jpg', '8764600-00-A_2.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            XS: 14,
-            S: 5,
-            M: 2,
-            L: 6,
-          },
+          stockBySize: { XS: 14, S: 5, M: 2, L: 6 },
           images: ['8764600-00-A_0_2000.jpg', '8764600-00-A_2.jpg'],
         },
       ],
@@ -616,24 +543,19 @@ export const initialData: SeedData = {
       images: ['8764813-00-A_0_2000.jpg', '8764813-00-A_1.jpg'],
       price: 40,
       slug: 'men_3d_wordmark_long_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'long sleeve'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XL: 10,
-            XXL: 5,
-          },
+          stockBySize: { XL: 10, XXL: 5 },
           images: ['8764813-00-A_0_2000.jpg', '8764813-00-A_1.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XL: 16,
-            XXL: 18,
-          },
+          stockBySize: { XL: 16, XXL: 18 },
           images: ['8764813-00-A_0_2000.jpg', '8764813-00-A_1.jpg'],
         },
       ],
@@ -645,24 +567,19 @@ export const initialData: SeedData = {
       images: ['8529198-00-A_0_2000.jpg', '8529198-00-A_1.jpg'],
       price: 40,
       slug: 'men_3d_t_logo_long_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-shirts'],
+      tags: ['shirt', 'long sleeve'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XS: 18,
-            XXL: 0,
-          },
+          stockBySize: { XS: 18, XXL: 0 },
           images: ['8529198-00-A_0_2000.jpg', '8529198-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 17,
-            XXL: 16,
-          },
+          stockBySize: { XS: 17, XXL: 16 },
           images: ['8529198-00-A_0_2000.jpg', '8529198-00-A_1.jpg'],
         },
       ],
@@ -674,32 +591,19 @@ export const initialData: SeedData = {
       images: ['1740245-00-A_0_2000.jpg', '1740245-00-A_1.jpg'],
       price: 115,
       slug: 'men_raven_lightweight_hoodie',
-      type: 'hoodies',
-      tags: ['hoodie'],
-      gender: 'men',
+      categories: ['men', 'men-hoodies'],
+      tags: ['hoodie', 'raven'],
+      brand: 'raven-collection',
+      attributes: { material: '70% bamboo and 30% cotton' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 10,
-            S: 2,
-            M: 17,
-            L: 16,
-            XL: 13,
-            XXL: 17,
-          },
+          stockBySize: { XS: 10, S: 2, M: 17, L: 16, XL: 13, XXL: 17 },
           images: ['1740245-00-A_0_2000.jpg', '1740245-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 19,
-            S: 3,
-            M: 5,
-            L: 3,
-            XL: 15,
-            XXL: 3,
-          },
+          stockBySize: { XS: 19, S: 3, M: 5, L: 3, XL: 15, XXL: 3 },
           images: ['1740245-00-A_0_2000.jpg', '1740245-00-A_1.jpg'],
         },
       ],
@@ -711,32 +615,19 @@ export const initialData: SeedData = {
       images: ['1740051-00-A_0_2000.jpg', '1740051-00-A_1.jpg'],
       price: 130,
       slug: 'chill_pullover_hoodie',
-      type: 'hoodies',
-      tags: ['hoodie'],
-      gender: 'unisex',
+      categories: ['unisex', 'unisex-hoodies'],
+      tags: ['hoodie', 'chill'],
+      brand: 'chill-collection',
+      attributes: { material: '60% cotton and 40% recycled polyester' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 9,
-            S: 19,
-            M: 4,
-            L: 1,
-            XL: 5,
-            XXL: 12,
-          },
+          stockBySize: { XS: 9, S: 19, M: 4, L: 1, XL: 5, XXL: 12 },
           images: ['1740051-00-A_0_2000.jpg', '1740051-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 6,
-            S: 5,
-            M: 3,
-            L: 18,
-            XL: 6,
-            XXL: 2,
-          },
+          stockBySize: { XS: 6, S: 5, M: 3, L: 18, XL: 6, XXL: 2 },
           images: ['1740051-00-A_0_2000.jpg', '1740051-00-A_1.jpg'],
         },
       ],
@@ -748,28 +639,19 @@ export const initialData: SeedData = {
       images: ['1741111-00-A_0_2000.jpg', '1741111-00-A_1.jpg'],
       price: 85,
       slug: 'men_chill_full_zip_hoodie',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      categories: ['men', 'men-hoodies'],
+      tags: ['hoodie', 'chill'],
+      brand: 'chill-collection',
+      attributes: { material: '60% cotton and 40% recycled polyester' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 2,
-            L: 19,
-            XL: 3,
-            XXL: 14,
-          },
+          stockBySize: { XS: 2, L: 19, XL: 3, XXL: 14 },
           images: ['1741111-00-A_0_2000.jpg', '1741111-00-A_1.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            XS: 10,
-            L: 6,
-            XL: 19,
-            XXL: 9,
-          },
+          stockBySize: { XS: 10, L: 6, XL: 19, XXL: 9 },
           images: ['1741111-00-A_0_2000.jpg', '1741111-00-A_1.jpg'],
         },
       ],
@@ -777,30 +659,23 @@ export const initialData: SeedData = {
     {
       title: "Men's Chill Quarter Zip Pullover - Gray",
       description:
-        'Introducing the Tesla Chill Collection. The Men’s Chill Quarter Zip Pullover has a premium, heavyweight exterior and soft fleece interior for comfort in any season. The pullover features subtle thermoplastic polyurethane Tesla logos on the left chest and below the back collar, as well as a custom matte zipper pull. Made from 60% cotton and 40% recycled polyester.',
+        "Introducing the Tesla Chill Collection. The Men's Chill Quarter Zip Pullover has a premium, heavyweight exterior and soft fleece interior for comfort in any season. The pullover features subtle thermoplastic polyurethane Tesla logos on the left chest and below the back collar, as well as a custom matte zipper pull. Made from 60% cotton and 40% recycled polyester.",
       images: ['1740140-00-A_0_2000.jpg', '1740140-00-A_1.jpg'],
       price: 85,
-      slug: 'men_chill_quarter_zip_pullover_-_gray',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      slug: 'men_chill_quarter_zip_pullover_gray',
+      categories: ['men', 'men-shirts'],
+      tags: ['pullover', 'chill'],
+      brand: 'chill-collection',
+      attributes: { material: '60% cotton and 40% recycled polyester' },
       variants: [
         {
           color: 'Black',
-          stockBySize: {
-            XS: 16,
-            S: 11,
-            M: 17,
-          },
+          stockBySize: { XS: 16, S: 11, M: 17 },
           images: ['1740140-00-A_0_2000.jpg', '1740140-00-A_1.jpg'],
         },
         {
           color: 'Red',
-          stockBySize: {
-            XS: 1,
-            S: 19,
-            M: 15,
-          },
+          stockBySize: { XS: 1, S: 19, M: 15 },
           images: ['1740140-00-A_0_2000.jpg', '1740140-00-A_1.jpg'],
         },
       ],
@@ -808,32 +683,23 @@ export const initialData: SeedData = {
     {
       title: "Men's Chill Quarter Zip Pullover - White",
       description:
-        'Introducing the Tesla Chill Collection. The Men’s Chill Quarter Zip Pullover has a premium, heavyweight exterior and soft fleece interior for comfort in any season. The pullover features subtle thermoplastic polyurethane Tesla logos on the left chest and below the back collar, as well as a custom matte zipper pull. Made from 60% cotton and 40% recycled polyester.',
+        "Introducing the Tesla Chill Collection. The Men's Chill Quarter Zip Pullover has a premium, heavyweight exterior and soft fleece interior for comfort in any season. The pullover features subtle thermoplastic polyurethane Tesla logos on the left chest and below the back collar, as well as a custom matte zipper pull. Made from 60% cotton and 40% recycled polyester.",
       images: ['1740145-00-A_2_2000.jpg', '1740145-00-A_1.jpg'],
       price: 85,
-      slug: 'men_chill_quarter_zip_pullover_-_white',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'men',
+      slug: 'men_chill_quarter_zip_pullover_white',
+      categories: ['men', 'men-shirts'],
+      tags: ['pullover', 'chill'],
+      brand: 'chill-collection',
+      attributes: { material: '60% cotton and 40% recycled polyester' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 17,
-            S: 2,
-            M: 15,
-            L: 16,
-          },
+          stockBySize: { XS: 17, S: 2, M: 15, L: 16 },
           images: ['1740145-00-A_2_2000.jpg', '1740145-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 1,
-            S: 12,
-            M: 6,
-            L: 7,
-          },
+          stockBySize: { XS: 1, S: 12, M: 6, L: 7 },
           images: ['1740145-00-A_2_2000.jpg', '1740145-00-A_1.jpg'],
         },
       ],
@@ -845,28 +711,18 @@ export const initialData: SeedData = {
       images: ['8529107-00-A_0_2000.jpg', '8529107-00-A_1.jpg'],
       price: 70,
       slug: '3d_large_wordmark_pullover_hoodie',
-      type: 'hoodies',
+      categories: ['unisex', 'unisex-hoodies'],
       tags: ['hoodie'],
-      gender: 'unisex',
+      brand: 'tesla',
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 7,
-            S: 3,
-            XL: 2,
-            XXL: 5,
-          },
+          stockBySize: { XS: 7, S: 3, XL: 2, XXL: 5 },
           images: ['8529107-00-A_0_2000.jpg', '8529107-00-A_1.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 14,
-            S: 18,
-            XL: 0,
-            XXL: 10,
-          },
+          stockBySize: { XS: 14, S: 18, XL: 0, XXL: 10 },
           images: ['8529107-00-A_0_2000.jpg', '8529107-00-A_1.jpg'],
         },
       ],
@@ -878,32 +734,18 @@ export const initialData: SeedData = {
       images: ['7654420-00-A_0_2000.jpg', '7654420-00-A_1_2000.jpg'],
       price: 60,
       slug: 'cybertruck_graffiti_hoodie',
-      type: 'hoodies',
-      tags: ['hoodie'],
-      gender: 'unisex',
+      categories: ['unisex', 'unisex-hoodies'],
+      tags: ['hoodie', 'cybertruck'],
+      brand: 'cybertruck',
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XS: 9,
-            S: 3,
-            M: 8,
-            L: 4,
-            XL: 14,
-            XXL: 2,
-          },
+          stockBySize: { XS: 9, S: 3, M: 8, L: 4, XL: 14, XXL: 2 },
           images: ['7654420-00-A_0_2000.jpg', '7654420-00-A_1_2000.jpg'],
         },
         {
           color: 'Red',
-          stockBySize: {
-            XS: 11,
-            S: 5,
-            M: 8,
-            L: 11,
-            XL: 18,
-            XXL: 7,
-          },
+          stockBySize: { XS: 11, S: 5, M: 8, L: 11, XL: 18, XXL: 7 },
           images: ['7654420-00-A_0_2000.jpg', '7654420-00-A_1_2000.jpg'],
         },
       ],
@@ -915,32 +757,19 @@ export const initialData: SeedData = {
       images: ['1657932-00-A_0_2000.jpg', '1657932-00-A_1.jpg'],
       price: 30,
       slug: 'relaxed_t_logo_hat',
-      type: 'hats',
-      tags: ['hats'],
-      gender: 'unisex',
+      categories: ['unisex', 'unisex-hats'],
+      tags: ['hat', 'cap'],
+      brand: 'tesla',
+      attributes: { material: '100% Cotton' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 9,
-            S: 3,
-            M: 3,
-            L: 1,
-            XL: 10,
-            XXL: 15,
-          },
+          stockBySize: { XS: 9, S: 3, M: 3, L: 1, XL: 10, XXL: 15 },
           images: ['1657932-00-A_0_2000.jpg', '1657932-00-A_1.jpg'],
         },
         {
           color: 'Green',
-          stockBySize: {
-            XS: 4,
-            S: 19,
-            M: 13,
-            L: 2,
-            XL: 6,
-            XXL: 19,
-          },
+          stockBySize: { XS: 4, S: 19, M: 13, L: 2, XL: 6, XXL: 19 },
           images: ['1657932-00-A_0_2000.jpg', '1657932-00-A_1.jpg'],
         },
       ],
@@ -948,36 +777,23 @@ export const initialData: SeedData = {
     {
       title: 'Thermal Cuffed Beanie',
       description:
-        'The Relaxed T Logo Hat is a classic silhouette combined with modern details, featuring a 3D T logo and a custom metal buckle closure. The ultrasoft design is flexible and abrasion resistant, while the inner sweatband includes quilted padding for extra comfort and moisture wicking. The visor is fully made from recycled plastic bottles. 100% Cotton.',
+        'The Thermal Cuffed Beanie is perfect for cold weather. Features a classic cuffed design with embroidered Tesla wordmark.',
       images: ['1740417-00-A_0_2000.jpg', '1740417-00-A_1.jpg'],
       price: 35,
       slug: 'thermal_cuffed_beanie',
-      type: 'hats',
-      tags: ['hats'],
-      gender: 'unisex',
+      categories: ['unisex', 'unisex-hats'],
+      tags: ['beanie', 'winter'],
+      brand: 'tesla',
+      attributes: { material: '100% Cotton' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 10,
-            S: 16,
-            M: 18,
-            L: 15,
-            XL: 1,
-            XXL: 17,
-          },
+          stockBySize: { XS: 10, S: 16, M: 18, L: 15, XL: 1, XXL: 17 },
           images: ['1740417-00-A_0_2000.jpg', '1740417-00-A_1.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            XS: 3,
-            S: 16,
-            M: 12,
-            L: 13,
-            XL: 12,
-            XXL: 11,
-          },
+          stockBySize: { XS: 3, S: 16, M: 12, L: 13, XL: 12, XXL: 11 },
           images: ['1740417-00-A_0_2000.jpg', '1740417-00-A_1.jpg'],
         },
       ],
@@ -989,26 +805,19 @@ export const initialData: SeedData = {
       images: ['1740535-00-A_0_2000.jpg', '1740535-00-A_1.jpg'],
       price: 225,
       slug: 'women_cropped_puffer_jacket',
-      type: 'hoodies',
-      tags: ['hoodie'],
-      gender: 'women',
+      categories: ['women', 'women-hoodies'],
+      tags: ['jacket', 'puffer'],
+      brand: 'tesla',
+      attributes: { material: '87% nylon and 13% polyurethane' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 4,
-            S: 5,
-            M: 12,
-          },
+          stockBySize: { XS: 4, S: 5, M: 12 },
           images: ['1740535-00-A_0_2000.jpg', '1740535-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 12,
-            S: 12,
-            M: 18,
-          },
+          stockBySize: { XS: 12, S: 12, M: 18 },
           images: ['1740535-00-A_0_2000.jpg', '1740535-00-A_1.jpg'],
         },
       ],
@@ -1020,28 +829,19 @@ export const initialData: SeedData = {
       images: ['1740226-00-A_0_2000.jpg', '1740226-00-A_1.jpg'],
       price: 130,
       slug: 'women_chill_half_zip_cropped_hoodie',
-      type: 'hoodies',
-      tags: ['hoodie'],
-      gender: 'women',
+      categories: ['women', 'women-hoodies'],
+      tags: ['hoodie', 'chill', 'cropped'],
+      brand: 'chill-collection',
+      attributes: { material: '60% cotton and 40% recycled polyester' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 6,
-            S: 5,
-            M: 3,
-            XXL: 10,
-          },
+          stockBySize: { XS: 6, S: 5, M: 3, XXL: 10 },
           images: ['1740226-00-A_0_2000.jpg', '1740226-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 9,
-            S: 9,
-            M: 15,
-            XXL: 12,
-          },
+          stockBySize: { XS: 9, S: 9, M: 15, XXL: 12 },
           images: ['1740226-00-A_0_2000.jpg', '1740226-00-A_1.jpg'],
         },
       ],
@@ -1053,32 +853,19 @@ export const initialData: SeedData = {
       images: ['1740260-00-A_0_2000.jpg', '1740260-00-A_1.jpg'],
       price: 110,
       slug: 'women_raven_slouchy_crew_sweatshirt',
-      type: 'hoodies',
-      tags: ['hoodie'],
-      gender: 'women',
+      categories: ['women', 'women-hoodies'],
+      tags: ['sweatshirt', 'raven'],
+      brand: 'raven-collection',
+      attributes: { material: '70% bamboo and 30% cotton' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 0,
-            S: 16,
-            M: 5,
-            L: 3,
-            XL: 5,
-            XXL: 6,
-          },
+          stockBySize: { XS: 0, S: 16, M: 5, L: 3, XL: 5, XXL: 6 },
           images: ['1740260-00-A_0_2000.jpg', '1740260-00-A_1.jpg'],
         },
         {
           color: 'White',
-          stockBySize: {
-            XS: 3,
-            S: 13,
-            M: 16,
-            L: 3,
-            XL: 19,
-            XXL: 3,
-          },
+          stockBySize: { XS: 3, S: 13, M: 16, L: 3, XL: 19, XXL: 3 },
           images: ['1740260-00-A_0_2000.jpg', '1740260-00-A_1.jpg'],
         },
       ],
@@ -1086,36 +873,23 @@ export const initialData: SeedData = {
     {
       title: "Women's Turbine Cropped Long Sleeve Tee",
       description:
-        "Introducing the Tesla Turbine Collection. Designed for style, comfort and everyday lifestyle, the Women's Turbine Cropped Long Sleeve Tee features a subtle, water-based Tesla wordmark across the chest and our T logo below the back collar. The lightweight material is double-dyed, creating a soft, casual style with a cropped silhouette. Made from 50% cotton and 50%",
+        "Introducing the Tesla Turbine Collection. Designed for style, comfort and everyday lifestyle, the Women's Turbine Cropped Long Sleeve Tee features a subtle, water-based Tesla wordmark across the chest and our T logo below the back collar. The lightweight material is double-dyed, creating a soft, casual style with a cropped silhouette. Made from 50% cotton and 50% polyester.",
       images: ['1740290-00-A_0_2000.jpg', '1740290-00-A_1.jpg'],
       price: 45,
       slug: 'women_turbine_cropped_long_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['shirt', 'turbine', 'cropped'],
+      brand: 'turbine-collection',
+      attributes: { material: '50% cotton and 50% polyester' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 12,
-            S: 7,
-            M: 7,
-            L: 0,
-            XL: 9,
-            XXL: 11,
-          },
+          stockBySize: { XS: 12, S: 7, M: 7, L: 0, XL: 9, XXL: 11 },
           images: ['1740290-00-A_0_2000.jpg', '1740290-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 3,
-            S: 10,
-            M: 8,
-            L: 0,
-            XL: 6,
-            XXL: 14,
-          },
+          stockBySize: { XS: 3, S: 10, M: 8, L: 0, XL: 6, XXL: 14 },
           images: ['1740290-00-A_0_2000.jpg', '1740290-00-A_1.jpg'],
         },
       ],
@@ -1123,28 +897,23 @@ export const initialData: SeedData = {
     {
       title: "Women's Turbine Cropped Short Sleeve Tee",
       description:
-        "ntroducing the Tesla Turbine Collection. Designed for style, comfort and everyday lifestyle, the Women's Turbine Cropped Short Sleeve Tee features a subtle, water-based Tesla wordmark across the chest and our T logo below the back collar. The lightweight material is double-dyed, creating a soft, casual style with a cropped silhouette. Made from 50% cotton and 50% polyester.",
+        "Introducing the Tesla Turbine Collection. Designed for style, comfort and everyday lifestyle, the Women's Turbine Cropped Short Sleeve Tee features a subtle, water-based Tesla wordmark across the chest and our T logo below the back collar. The lightweight material is double-dyed, creating a soft, casual style with a cropped silhouette. Made from 50% cotton and 50% polyester.",
       images: ['1741441-00-A_0_2000.jpg', '1741441-00-A_1.jpg'],
       price: 40,
       slug: 'women_turbine_cropped_short_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['shirt', 'turbine', 'cropped'],
+      brand: 'turbine-collection',
+      attributes: { material: '50% cotton and 50% polyester' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 11,
-            S: 18,
-          },
+          stockBySize: { XS: 11, S: 18 },
           images: ['1741441-00-A_0_2000.jpg', '1741441-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 1,
-            S: 6,
-          },
+          stockBySize: { XS: 1, S: 6 },
           images: ['1741441-00-A_0_2000.jpg', '1741441-00-A_1.jpg'],
         },
       ],
@@ -1156,32 +925,19 @@ export const initialData: SeedData = {
       images: ['8765090-00-A_0_2000.jpg', '8765090-00-A_1.jpg'],
       price: 35,
       slug: 'women_t_logo_short_sleeve_scoop_neck_tee',
-      type: 'shirts',
+      categories: ['women', 'women-shirts'],
       tags: ['shirt'],
-      gender: 'women',
+      brand: 'tesla',
+      attributes: { material: '50% Peruvian cotton and 50% Peruvian viscose' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 12,
-            S: 4,
-            M: 10,
-            L: 1,
-            XL: 1,
-            XXL: 8,
-          },
+          stockBySize: { XS: 12, S: 4, M: 10, L: 1, XL: 1, XXL: 8 },
           images: ['8765090-00-A_0_2000.jpg', '8765090-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 18,
-            S: 3,
-            M: 5,
-            L: 10,
-            XL: 11,
-            XXL: 0,
-          },
+          stockBySize: { XS: 18, S: 3, M: 5, L: 10, XL: 11, XXL: 0 },
           images: ['8765090-00-A_0_2000.jpg', '8765090-00-A_1.jpg'],
         },
       ],
@@ -1193,30 +949,19 @@ export const initialData: SeedData = {
       images: ['8765100-00-A_0_2000.jpg', '8765100-00-A_1.jpg'],
       price: 40,
       slug: 'women_t_logo_long_sleeve_scoop_neck_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['shirt', 'long sleeve'],
+      brand: 'tesla',
+      attributes: { material: '50% Peruvian cotton and 50% Peruvian viscose' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 1,
-            S: 0,
-            L: 3,
-            XL: 8,
-            XXL: 9,
-          },
+          stockBySize: { XS: 1, S: 0, L: 3, XL: 8, XXL: 9 },
           images: ['8765100-00-A_0_2000.jpg', '8765100-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 1,
-            S: 18,
-            L: 9,
-            XL: 12,
-            XXL: 3,
-          },
+          stockBySize: { XS: 1, S: 18, L: 9, XL: 12, XXL: 3 },
           images: ['8765100-00-A_0_2000.jpg', '8765100-00-A_1.jpg'],
         },
       ],
@@ -1227,33 +972,20 @@ export const initialData: SeedData = {
         "Designed for style and comfort, the Women's Small Wordmark Short Sleeve V-Neck Tee features a tonal 3D silicone-printed wordmark on the left chest. Made of 100% Peruvian cotton.",
       images: ['8765120-00-A_0_2000.jpg', '8765120-00-A_1.jpg'],
       price: 35,
-      slug: 'women_small_wordmark_short_sleeve_v-neck_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      slug: 'women_small_wordmark_short_sleeve_v_neck_tee',
+      categories: ['women', 'women-shirts'],
+      tags: ['shirt', 'v-neck'],
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 9,
-            S: 8,
-            M: 10,
-            L: 9,
-            XL: 5,
-            XXL: 8,
-          },
+          stockBySize: { XS: 9, S: 8, M: 10, L: 9, XL: 5, XXL: 8 },
           images: ['8765120-00-A_0_2000.jpg', '8765120-00-A_1.jpg'],
         },
         {
           color: 'Red',
-          stockBySize: {
-            XS: 0,
-            S: 0,
-            M: 0,
-            L: 16,
-            XL: 15,
-            XXL: 8,
-          },
+          stockBySize: { XS: 0, S: 0, M: 0, L: 16, XL: 15, XXL: 8 },
           images: ['8765120-00-A_0_2000.jpg', '8765120-00-A_1.jpg'],
         },
       ],
@@ -1265,24 +997,19 @@ export const initialData: SeedData = {
       images: ['8765115-00-A_0_2000.jpg', '8765115-00-A_1.jpg'],
       price: 35,
       slug: 'women_large_wordmark_short_sleeve_crew_neck_tee',
-      type: 'shirts',
+      categories: ['women', 'women-shirts'],
       tags: ['shirt'],
-      gender: 'women',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian pima cotton' },
       variants: [
         {
           color: 'Green',
-          stockBySize: {
-            XL: 17,
-            XXL: 5,
-          },
+          stockBySize: { XL: 17, XXL: 5 },
           images: ['8765115-00-A_0_2000.jpg', '8765115-00-A_1.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XL: 16,
-            XXL: 16,
-          },
+          stockBySize: { XL: 16, XXL: 16 },
           images: ['8765115-00-A_0_2000.jpg', '8765115-00-A_1.jpg'],
         },
       ],
@@ -1294,61 +1021,43 @@ export const initialData: SeedData = {
       images: ['1549275-00-A_0_2000.jpg', '1549275-00-A_1.jpg'],
       price: 35,
       slug: 'women_plaid_mode_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['shirt', 'plaid'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            S: 14,
-            M: 13,
-          },
+          stockBySize: { S: 14, M: 13 },
           images: ['1549275-00-A_0_2000.jpg', '1549275-00-A_1.jpg'],
         },
         {
           color: 'Red',
-          stockBySize: {
-            S: 5,
-            M: 17,
-          },
+          stockBySize: { S: 5, M: 17 },
           images: ['1549275-00-A_0_2000.jpg', '1549275-00-A_1.jpg'],
         },
       ],
     },
     {
-      title: 'Women’s Powerwall Tee',
+      title: "Women's Powerwall Tee",
       description:
-        "Inspired by our popular home battery, the Tesla Powerwall Tee is made from 100% cotton and features the phrase 'Pure Energy' under our signature logo in the back. Designed for fit, comfort and style, the exclusive tee promotes sustainable energy in any",
+        "Inspired by our popular home battery, the Tesla Powerwall Tee is made from 100% cotton and features the phrase 'Pure Energy' under our signature logo in the back. Designed for fit, comfort and style, the exclusive tee promotes sustainable energy in any environment.",
       images: ['9877040-00-A_0_2000.jpg', '9877040-00-A_1.jpg'],
       price: 130,
       slug: 'women_powerwall_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['shirt', 'powerwall'],
+      brand: 'tesla',
+      attributes: { material: '100% cotton' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 19,
-            S: 8,
-            M: 11,
-            L: 2,
-            XL: 11,
-            XXL: 18,
-          },
+          stockBySize: { XS: 19, S: 8, M: 11, L: 2, XL: 11, XXL: 18 },
           images: ['9877040-00-A_0_2000.jpg', '9877040-00-A_1.jpg'],
         },
         {
           color: 'Red',
-          stockBySize: {
-            XS: 7,
-            S: 19,
-            M: 6,
-            L: 7,
-            XL: 15,
-            XXL: 7,
-          },
+          stockBySize: { XS: 7, S: 19, M: 6, L: 7, XL: 15, XXL: 7 },
           images: ['9877040-00-A_0_2000.jpg', '9877040-00-A_1.jpg'],
         },
       ],
@@ -1360,28 +1069,18 @@ export const initialData: SeedData = {
       images: ['5645680-00-A_0_2000.jpg', '5645680-00-A_3.jpg'],
       price: 90,
       slug: 'women_corp_jacket',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['jacket'],
+      brand: 'tesla',
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            M: 11,
-            L: 1,
-            XL: 7,
-            XXL: 7,
-          },
+          stockBySize: { M: 11, L: 1, XL: 7, XXL: 7 },
           images: ['5645680-00-A_0_2000.jpg', '5645680-00-A_3.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            M: 5,
-            L: 5,
-            XL: 6,
-            XXL: 7,
-          },
+          stockBySize: { M: 5, L: 5, XL: 6, XXL: 7 },
           images: ['5645680-00-A_0_2000.jpg', '5645680-00-A_3.jpg'],
         },
       ],
@@ -1393,32 +1092,19 @@ export const initialData: SeedData = {
       images: ['1740270-00-A_0_2000.jpg', '1740270-00-A_1.jpg'],
       price: 100,
       slug: 'women_raven_joggers',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'women',
+      categories: ['women', 'women-shirts'],
+      tags: ['joggers', 'raven'],
+      brand: 'raven-collection',
+      attributes: { material: '70% bamboo and 30% cotton' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 4,
-            S: 17,
-            M: 7,
-            L: 13,
-            XL: 14,
-            XXL: 5,
-          },
+          stockBySize: { XS: 4, S: 17, M: 7, L: 13, XL: 14, XXL: 5 },
           images: ['1740270-00-A_0_2000.jpg', '1740270-00-A_1.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 19,
-            S: 17,
-            M: 19,
-            L: 17,
-            XL: 14,
-            XXL: 12,
-          },
+          stockBySize: { XS: 19, S: 17, M: 19, L: 17, XL: 14, XXL: 12 },
           images: ['1740270-00-A_0_2000.jpg', '1740270-00-A_1.jpg'],
         },
       ],
@@ -1430,26 +1116,19 @@ export const initialData: SeedData = {
       images: ['1742694-00-A_1_2000.jpg', '1742694-00-A_3.jpg'],
       price: 30,
       slug: 'kids_cybertruck_long_sleeve_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-shirts'],
+      tags: ['shirt', 'cybertruck', 'long sleeve'],
+      brand: 'cybertruck',
+      attributes: { material: '50% cotton and 50% polyester' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 13,
-            S: 13,
-            M: 4,
-          },
+          stockBySize: { XS: 13, S: 13, M: 4 },
           images: ['1742694-00-A_1_2000.jpg', '1742694-00-A_3.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 19,
-            S: 12,
-            M: 8,
-          },
+          stockBySize: { XS: 19, S: 12, M: 8 },
           images: ['1742694-00-A_1_2000.jpg', '1742694-00-A_3.jpg'],
         },
       ],
@@ -1461,26 +1140,19 @@ export const initialData: SeedData = {
       images: ['8529312-00-A_0_2000.jpg', '8529312-00-A_1.jpg'],
       price: 25,
       slug: 'kids_scribble_t_logo_tee',
-      type: 'shirts',
+      categories: ['kids', 'kids-shirts'],
       tags: ['shirt'],
-      gender: 'kid',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 8,
-            S: 2,
-            M: 12,
-          },
+          stockBySize: { XS: 8, S: 2, M: 12 },
           images: ['8529312-00-A_0_2000.jpg', '8529312-00-A_1.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 19,
-            S: 8,
-            M: 9,
-          },
+          stockBySize: { XS: 19, S: 8, M: 9 },
           images: ['8529312-00-A_0_2000.jpg', '8529312-00-A_1.jpg'],
         },
       ],
@@ -1492,26 +1164,19 @@ export const initialData: SeedData = {
       images: ['8529342-00-A_0_2000.jpg', '8529342-00-A_1.jpg'],
       price: 25,
       slug: 'kids_cybertruck_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-shirts'],
+      tags: ['shirt', 'cybertruck'],
+      brand: 'cybertruck',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 11,
-            S: 19,
-            M: 8,
-          },
+          stockBySize: { XS: 11, S: 19, M: 8 },
           images: ['8529342-00-A_0_2000.jpg', '8529342-00-A_1.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 8,
-            S: 7,
-            M: 19,
-          },
+          stockBySize: { XS: 8, S: 7, M: 19 },
           images: ['8529342-00-A_0_2000.jpg', '8529342-00-A_1.jpg'],
         },
       ],
@@ -1523,26 +1188,19 @@ export const initialData: SeedData = {
       images: ['8529354-00-A_0_2000.jpg', '8529354-00-A_1.jpg'],
       price: 30,
       slug: 'kids_racing_stripe_tee',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-shirts'],
+      tags: ['shirt', 'racing'],
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 10,
-            S: 2,
-            M: 15,
-          },
+          stockBySize: { XS: 10, S: 2, M: 15 },
           images: ['8529354-00-A_0_2000.jpg', '8529354-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 3,
-            S: 7,
-            M: 0,
-          },
+          stockBySize: { XS: 3, S: 7, M: 0 },
           images: ['8529354-00-A_0_2000.jpg', '8529354-00-A_1.jpg'],
         },
       ],
@@ -1554,26 +1212,19 @@ export const initialData: SeedData = {
       images: ['7652465-00-A_0_2000.jpg', '7652465-00-A_1.jpg'],
       price: 30,
       slug: 'kids_3d_t_logo_tee',
-      type: 'shirts',
+      categories: ['kids', 'kids-shirts'],
       tags: ['shirt'],
-      gender: 'kid',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Black',
-          stockBySize: {
-            XS: 18,
-            S: 17,
-            M: 3,
-          },
+          stockBySize: { XS: 18, S: 17, M: 3 },
           images: ['7652465-00-A_0_2000.jpg', '7652465-00-A_1.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 5,
-            S: 7,
-            M: 14,
-          },
+          stockBySize: { XS: 5, S: 7, M: 14 },
           images: ['7652465-00-A_0_2000.jpg', '7652465-00-A_1.jpg'],
         },
       ],
@@ -1585,26 +1236,19 @@ export const initialData: SeedData = {
       images: ['100042307_0_2000.jpg', '100042307_alt_2000.jpg'],
       price: 30,
       slug: 'kids_checkered_tee',
-      type: 'shirts',
+      categories: ['kids', 'kids-shirts'],
       tags: ['shirt'],
-      gender: 'kid',
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 7,
-            S: 9,
-            M: 10,
-          },
+          stockBySize: { XS: 7, S: 9, M: 10 },
           images: ['100042307_0_2000.jpg', '100042307_alt_2000.jpg'],
         },
         {
           color: 'Blue',
-          stockBySize: {
-            XS: 9,
-            S: 2,
-            M: 9,
-          },
+          stockBySize: { XS: 9, S: 2, M: 9 },
           images: ['100042307_0_2000.jpg', '100042307_alt_2000.jpg'],
         },
       ],
@@ -1616,24 +1260,19 @@ export const initialData: SeedData = {
       images: ['1473809-00-A_1_2000.jpg', '1473809-00-A_alt.jpg'],
       price: 25,
       slug: 'made_on_earth_by_humans_onesie',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-shirts'],
+      tags: ['onesie'],
+      brand: 'tesla',
+      attributes: { material: '100% Cotton' },
       variants: [
         {
           color: 'White',
-          stockBySize: {
-            XS: 4,
-            S: 11,
-          },
+          stockBySize: { XS: 4, S: 11 },
           images: ['1473809-00-A_1_2000.jpg', '1473809-00-A_alt.jpg'],
         },
         {
           color: 'Black',
-          stockBySize: {
-            XS: 14,
-            S: 1,
-          },
+          stockBySize: { XS: 14, S: 1 },
           images: ['1473809-00-A_1_2000.jpg', '1473809-00-A_alt.jpg'],
         },
       ],
@@ -1645,24 +1284,19 @@ export const initialData: SeedData = {
       images: ['8529387-00-A_0_2000.jpg', '8529387-00-A_1.jpg'],
       price: 30,
       slug: 'scribble_t_logo_onesie',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-shirts'],
+      tags: ['onesie'],
+      brand: 'tesla',
+      attributes: { material: '100% Peruvian cotton' },
       variants: [
         {
           color: 'Red',
-          stockBySize: {
-            XS: 1,
-            S: 14,
-          },
+          stockBySize: { XS: 1, S: 14 },
           images: ['8529387-00-A_0_2000.jpg', '8529387-00-A_1.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 2,
-            S: 7,
-          },
+          stockBySize: { XS: 2, S: 7 },
           images: ['8529387-00-A_0_2000.jpg', '8529387-00-A_1.jpg'],
         },
       ],
@@ -1673,25 +1307,20 @@ export const initialData: SeedData = {
         'Show your commitment to sustainable energy with this cheeky onesie for your young one. Note: Does not prevent emissions. 100% Cotton. Made in Peru.',
       images: ['1473834-00-A_2_2000.jpg', '1473829-00-A_2_2000.jpg'],
       price: 30,
-      slug: 'zero_emissions_(almost)_onesie',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      slug: 'zero_emissions_almost_onesie',
+      categories: ['kids', 'kids-shirts'],
+      tags: ['onesie'],
+      brand: 'tesla',
+      attributes: { material: '100% Cotton' },
       variants: [
         {
           color: 'Black',
-          stockBySize: {
-            XS: 16,
-            S: 12,
-          },
+          stockBySize: { XS: 16, S: 12 },
           images: ['1473834-00-A_2_2000.jpg', '1473829-00-A_2_2000.jpg'],
         },
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 19,
-            S: 18,
-          },
+          stockBySize: { XS: 19, S: 18 },
           images: ['1473834-00-A_2_2000.jpg', '1473829-00-A_2_2000.jpg'],
         },
       ],
@@ -1699,30 +1328,23 @@ export const initialData: SeedData = {
     {
       title: 'Kids Cyberquad Bomber Jacket',
       description:
-        'Wear your Kids Cyberquad Bomber Jacket during your adventures on Cyberquad for Kids. The bomber jacket features a graffiti-style illustration of our Cyberquad silhouette and wordmark. With three zippered pockets and our signature T logo and Tesla wordmark printed along the sleeves, Kids Cyberquad Bomber Jacket is perfect for wherever the trail takes you. Made from 60% cotton and 40% polyester.',
+        'Wear your Kids Cyberquad Bomber Jacket during your adventures on Cyberquad for Kids. The bomber jacket features a graffiti-style illustration of our Cyberquad silhouette and wordmark. With three zippered pockets and our signature T logo and Tesla wordmark printed along the sleeves, Kids Cyberquad Bomber Jacket is perfect for wherever the trail takes you. Made from 60% cotton and 40% polyester.',
       images: ['1742702-00-A_0_2000.jpg', '1742702-00-A_1.jpg'],
       price: 65,
       slug: 'kids_cyberquad_bomber_jacket',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-jackets'],
+      tags: ['jacket', 'cybertruck'],
+      brand: 'cybertruck',
+      attributes: { material: '60% cotton and 40% polyester' },
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 19,
-            S: 14,
-            M: 7,
-          },
+          stockBySize: { XS: 19, S: 14, M: 7 },
           images: ['1742702-00-A_0_2000.jpg', '1742702-00-A_1.jpg'],
         },
         {
           color: 'Green',
-          stockBySize: {
-            XS: 5,
-            S: 9,
-            M: 3,
-          },
+          stockBySize: { XS: 5, S: 9, M: 3 },
           images: ['1742702-00-A_0_2000.jpg', '1742702-00-A_1.jpg'],
         },
       ],
@@ -1734,26 +1356,18 @@ export const initialData: SeedData = {
       images: ['1506211-00-A_0_2000.jpg', '1506211-00-A_1_2000.jpg'],
       price: 30,
       slug: 'kids_corp_jacket',
-      type: 'shirts',
-      tags: ['shirt'],
-      gender: 'kid',
+      categories: ['kids', 'kids-jackets'],
+      tags: ['jacket'],
+      brand: 'tesla',
       variants: [
         {
           color: 'Yellow',
-          stockBySize: {
-            XS: 14,
-            S: 3,
-            M: 4,
-          },
+          stockBySize: { XS: 14, S: 3, M: 4 },
           images: ['1506211-00-A_0_2000.jpg', '1506211-00-A_1_2000.jpg'],
         },
         {
           color: 'Green',
-          stockBySize: {
-            XS: 19,
-            S: 19,
-            M: 2,
-          },
+          stockBySize: { XS: 19, S: 19, M: 2 },
           images: ['1506211-00-A_0_2000.jpg', '1506211-00-A_1_2000.jpg'],
         },
       ],
