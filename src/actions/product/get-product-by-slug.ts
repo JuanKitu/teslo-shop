@@ -1,47 +1,70 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import type { Product, ProductVariant } from '@/interfaces';
+import type { Product } from '@/interfaces';
+import { processVariants } from '@/utils';
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const product = await prisma.product.findFirst({
-      where: { slug },
+      where: {
+        slug,
+        isActive: true,
+        deletedAt: null,
+      },
       include: {
-        images: true,
-        variants: { include: { images: true } },
-        category: { select: { name: true } },
+        images: {
+          where: { variantId: null },
+          orderBy: { order: 'asc' },
+        },
+        variants: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            images: {
+              orderBy: { order: 'asc' },
+            },
+            optionValues: {
+              include: {
+                option: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!product) return null;
-    const { images: ProductImage, ...restProduct } = product;
-    const images = Array.from(
-      new Set([
-        ...ProductImage.map((i) => i.url),
-        ...product.variants.flatMap((v) => v.images.map((i) => i.url)),
-      ])
-    );
+    if (!product) {
+      return null;
+    }
 
-    const variants: ProductVariant[] = product.variants.map(
-      ({ color = '', size = 'GENERIC', inStock = 0, price = 0, images = [] }) => ({
-        color,
-        size,
-        stock: inStock,
-        price,
-        ProductImage: images,
-        images: images.map((i) => i.url),
-      })
-    );
+    // Procesar variantes usando el helper
+    const { variants, availableColors, availableSizes } = processVariants(product.variants);
+
+    // Mapear producto completo
 
     return {
-      ...restProduct,
-      ProductImage,
-      images, // sobrescribe el array de objetos con URLs
-      variants, // sobrescribe los objetos anidados ya formateados
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      slug: product.slug,
+      price: product.price,
+      tags: product.tags,
+      images: product.images.map((img) => img.url),
+      variants,
+      availableColors,
+      availableSizes,
     };
   } catch (error) {
     console.error('[getProductBySlug]', error);
-    throw new Error('Error al obtener producto por slug');
+    return null;
   }
 }

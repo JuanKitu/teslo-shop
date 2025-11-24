@@ -37,7 +37,10 @@ export default async function orderPage({ params, searchParams }: Props) {
             <CardPayState isPaid={order.isPaid} />
             {/* Items */}
             {order.OrderItem.map((item) => (
-              <div key={item.product.slug + '-' + item.product.size} className="flex mb-5">
+              <div
+                key={`${item.product.id}-${item.product.size}-${item.product.color}`}
+                className="flex mb-5"
+              >
                 <ProductImage
                   src={item.product.image}
                   alt={item.product.title}

@@ -7,89 +7,489 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Size {
-  XS
-  S
-  M
-  L
-  XL
-  XXL
-  XXXL
-  GENERIC
-}
-
-enum Gender {
-  men
-  women
-  kid
-  unisex
-}
-
+// ===================================
+// ENUMS
+// ===================================
 enum Role {
   admin
   user
 }
 
-model Category {
-  id      String    @id @default(uuid())
-  name    String    @unique
-  Product Product[]
+enum MediaType {
+  IMAGE
+  VIDEO
 }
 
-model Product {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  slug        String   @unique
-  gender      Gender
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  price       Float    @default(0)
-  tags        String[] @default([])
+enum AttributeType {
+  TEXT // Texto simple
+  NUMBER // Numérico
+  BOOLEAN // Sí/No
+  SELECT // Lista de opciones (una)
+  MULTISELECT // Múltiples opciones
+  COLOR // Selector de color
+  DATE // Fecha
+}
 
-  variants  ProductVariant[]
-  images    ProductImage[] // imágenes generales del producto
+enum OptionType {
+  TEXT // texto libre
+  COLOR // selector de color con hex
+  SIZE // talla predefinida
+  SELECT // lista desplegable
+  NUMBER // numérico con unidad
+}
+
+// ===================================
+// CATEGORÍAS (Jerárquicas)
+// ===================================
+model Category {
+  id          String  @id @default(uuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+
+  // 🌳 Jerarquía (self-reference)
+  parentId String?
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryHierarchy")
+
+  // 🎨 SEO
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  metaKeywords    String[] @default([])
+
+  // 📊 Ordenamiento y visibilidad
+  order      Int     @default(0)
+  isActive   Boolean @default(true) // false = no accesible
+  isHidden   Boolean @default(false) // true = no en menús, pero accesible por URL
+  isFeatured Boolean @default(false) // destacada en home
+
+  // 🖼️ Media (imágenes/videos)
+  media CategoryMedia[]
+
+  // 🗑️ Soft delete
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🔗 Relaciones
+  products ProductCategory[]
+
+  @@index([slug])
+  @@index([parentId])
+  @@index([isActive, isHidden, deletedAt])
+  @@index([isFeatured])
+  @@index([order])
+  @@map("categories")
+}
+
+model CategoryMedia {
+  id         String    @id @default(uuid())
+  categoryId String
+  type       MediaType
+  url        String
+  order      Int       @default(0)
+  isMain     Boolean   @default(false)
+  alt        String?
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+  @@index([order])
+  @@map("category_media")
+}
+
+// ===================================
+// MARCAS/TAXONOMÍAS (Planas)
+// ===================================
+model Brand {
+  id          String  @id @default(uuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+
+  // 🏷️ Tipo de taxonomía (extensible)
+  type String @default("brand") // "brand", "collection", "designer", "line"
+
+  // 🎨 SEO
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  metaKeywords    String[] @default([])
+
+  // 📊 Ordenamiento y visibilidad
+  order      Int     @default(0)
+  isActive   Boolean @default(true)
+  isHidden   Boolean @default(false)
+  isFeatured Boolean @default(false)
+
+  // 🖼️ Media
+  media BrandMedia[]
+
+  // 🗑️ Soft delete
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🔗 Relaciones
+  products ProductBrand[]
+
+  @@index([slug])
+  @@index([type])
+  @@index([isActive, isHidden, deletedAt])
+  @@index([isFeatured])
+  @@index([order])
+  @@map("brands")
+}
+
+model BrandMedia {
+  id      String    @id @default(uuid())
+  brandId String
+  type    MediaType
+  url     String
+  order   Int       @default(0)
+  isMain  Boolean   @default(false)
+  alt     String?
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([order])
+  @@map("brand_media")
+}
+
+// ===================================
+// OPCIONES DE VARIANTE (Shopify Style)
+// ===================================
+model VariantOption {
+  id   String     @id @default(uuid())
+  name String // "Color", "Talla", "Almacenamiento", "RAM"
+  slug String     @unique
+  type OptionType @default(TEXT)
+
+  // 📝 Ayuda y placeholder
+  description String?
+  placeholder String? // "Ej: Rojo, Azul, Verde"
+
+  // 📊 Orden de presentación global
+  position Int @default(0)
+
+  // ⚙️ Configuración
+  isRequired   Boolean @default(false) // si es obligatorio definirlo
+  isFilterable Boolean @default(true) // si aparece en filtros de búsqueda
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🔗 Relaciones
+  productOptions ProductVariantOption[]
+  variantValues  VariantOptionValue[]
+
+  @@index([slug])
+  @@index([position])
+  @@index([isFilterable])
+  @@map("variant_options")
+}
+
+// ===================================
+// OPCIONES DE VARIANTE POR PRODUCTO
+// ===================================
+model ProductVariantOption {
+  id        String @id @default(uuid())
+  productId String
+  optionId  String
+
+  // 📊 Orden de presentación en este producto
+  position Int @default(0)
+
+  // 📋 Valores posibles para este producto específico
+  // Ejemplo: ["Rojo", "Azul", "Verde"] para color
+  values String[] @default([])
+
+  product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  option  VariantOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, optionId])
+  @@index([productId])
+  @@index([optionId])
+  @@index([position])
+  @@map("product_variant_options")
+}
+
+// ===================================
+// ATRIBUTOS DESCRIPTIVOS (no generan variantes)
+// ===================================
+model AttributeDefinition {
+  id   String        @id @default(uuid())
+  name String // "Material", "Garantía", "Peso"
+  slug String        @unique
+  type AttributeType
+
+  // 📋 Para SELECT/MULTISELECT
+  options String[] @default([])
+
+  // ⚙️ Validaciones
+  isRequired   Boolean @default(false)
+  isFilterable Boolean @default(true)
+
+  // 📊 Ordenamiento y agrupación
+  order Int     @default(0)
+  group String? // "Características", "Especificaciones", "Cuidado"
+
+  // 📝 Ayuda
+  description String?
+  unit        String? // "kg", "cm", "meses"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🔗 Relaciones
+  productAttributes ProductAttribute[]
+
+  @@index([slug])
+  @@index([type])
+  @@index([isFilterable])
+  @@index([group, order])
+  @@map("attribute_definitions")
+}
+
+model ProductAttribute {
+  id          String @id @default(uuid())
+  productId   String
+  attributeId String
+
+  // 💾 Valor (uno de estos según el tipo)
+  valueText   String?
+  valueNumber Float?
+  valueBool   Boolean?
+  valueSelect String?
+  valueMulti  String[]  @default([])
+  valueColor  String? // hex color
+  valueDate   DateTime?
+
+  product   Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attribute AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, attributeId])
+  @@index([productId])
+  @@index([attributeId])
+  @@index([valueSelect]) // para filtros
+  @@index([valueNumber]) // para rangos
+  @@map("product_attributes")
+}
+
+// ===================================
+// PRODUCTO
+// ===================================
+model Product {
+  id          String @id @default(uuid())
+  title       String @db.VarChar(255)
+  description String @db.Text
+  slug        String @unique
+
+  price Float @default(0) // precio base
+
+  // 🏷️ Tags para búsqueda
+  tags String[] @default([])
+
+  // 🎨 SEO
+  metaTitle       String?  @db.VarChar(255)
+  metaDescription String?  @db.Text
+  metaKeywords    String[] @default([])
+
+  // 📊 Visibilidad y estado
+  isActive   Boolean @default(true)
+  isHidden   Boolean @default(false)
+  isFeatured Boolean @default(false)
+
+  // 🗑️ Soft delete
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🔗 Relaciones many-to-many
+  categories ProductCategory[]
+  brands     ProductBrand[]
+
+  // 🔗 Atributos descriptivos (no generan variantes)
+  attributes ProductAttribute[]
+
+  // 🔗 Opciones de variante (definen qué opciones tiene)
+  variantOptions ProductVariantOption[]
+
+  // 🔗 Variantes reales (combinaciones de opciones)
+  variants ProductVariant[]
+
+  // 🔗 Imágenes generales
+  images ProductImage[]
+
+  // 🔗 Relaciones existentes
   OrderItem OrderItem[]
   Favorite  Favorite[]
+
+  @@index([slug])
+  @@index([isActive, isHidden, deletedAt])
+  @@index([isFeatured])
+  @@index([createdAt])
+  @@index([price])
+  @@index([title]) // para búsquedas
+  @@map("products")
 }
 
+// ===================================
+// VARIANTE DE PRODUCTO (SKU único)
+// ===================================
+model ProductVariant {
+  id        String @id @default(uuid())
+  productId String
+
+  // 💰 Precio específico (null = usar precio base del producto)
+  price Float?
+
+  // 📦 Stock
+  inStock Int @default(0)
+
+  // 🏷️ Códigos
+  sku     String? @unique
+  barcode String?
+
+  // 📏 Peso y dimensiones (para shipping)
+  weight Float? // en gramos
+  length Float? // en cm
+  width  Float? // en cm
+  height Float? // en cm
+
+  // ⚙️ Estado
+  isActive Boolean @default(true)
+
+  // 🗑️ Soft delete
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🔗 Relaciones
+  product      Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  optionValues VariantOptionValue[] // valores de opciones (Color: Rojo, Talla: M)
+  images       ProductImage[] // imágenes específicas de esta variante
+  orderItems   OrderItem[]
+
+  // ⚡ ÍNDICES OPTIMIZADOS
+  @@index([productId, inStock, isActive]) // filtrar disponibles
+  @@index([productId, isActive])
+  @@index([sku])
+  @@index([price])
+  @@index([inStock])
+  @@index([barcode])
+  @@map("product_variants")
+}
+
+// ===================================
+// VALORES DE OPCIÓN POR VARIANTE
+// ===================================
+model VariantOptionValue {
+  id        String @id @default(uuid())
+  variantId String
+  optionId  String
+  value     String // "Rojo", "M", "128GB", etc.
+
+  option         VariantOption  @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // ⚡ ÍNDICES CRÍTICOS PARA PERFORMANCE
+  @@unique([variantId, optionId]) // una variante solo puede tener un valor por opción
+  @@index([variantId]) // join rápido
+  @@index([optionId, value]) // filtros (ej: color = "Rojo")
+  @@index([value]) // búsquedas generales
+  @@map("variant_option_values")
+}
+
+// ===================================
+// RELACIÓN PRODUCTO-CATEGORÍA
+// ===================================
+model ProductCategory {
+  id         String @id @default(uuid())
+  productId  String
+  categoryId String
+
+  isPrimary Boolean @default(false) // categoría principal
+  order     Int     @default(0)
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+  @@index([isPrimary])
+  @@map("product_categories")
+}
+
+// ===================================
+// RELACIÓN PRODUCTO-MARCA
+// ===================================
+model ProductBrand {
+  id        String @id @default(uuid())
+  productId String
+  brandId   String
+
+  isPrimary Boolean @default(false)
+  order     Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  brand   Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, brandId])
+  @@index([productId])
+  @@index([brandId])
+  @@index([isPrimary])
+  @@map("product_brands")
+}
+
+// ===================================
+// IMÁGENES DE PRODUCTO/VARIANTE
+// ===================================
+model ProductImage {
+  id    Int     @id @default(autoincrement())
+  url   String
+  alt   String?
+  order Int     @default(0)
+
+  productId String?
+  variantId String?
+
+  product Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([variantId])
+  @@index([order])
+  @@map("product_images")
+}
+
+// ===================================
+// FAVORITOS
+// ===================================
 model Favorite {
   id        String @id @default(uuid())
   userId    String
   productId String
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, productId]) // evita duplicados
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@map("favorites")
 }
 
-model ProductVariant {
-  id        String  @id @default(uuid())
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
-
-  size    Size    @default(GENERIC)
-  color   String  @default("GENERIC")
-  inStock Int     @default(0)
-  price   Float?
-  sku     String? @unique
-
-  images ProductImage[] // imágenes específicas (usa la misma tabla)
-}
-
-model ProductImage {
-  id  Int    @id @default(autoincrement())
-  url String
-
-  productId String?
-  variantId String?
-
-  product Product?        @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
-}
-
-///auth.js
+// ===================================
+// USUARIOS Y AUTENTICACIÓN
+// ===================================
 model Account {
   id                String  @id @default(uuid())
   userId            String  @map("user_id")
@@ -107,6 +507,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -115,8 +516,10 @@ model Session {
   sessionToken String   @unique @map("session_token")
   userId       String   @map("user_id")
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -124,26 +527,67 @@ model User {
   id            String    @id @default(uuid())
   name          String
   email         String    @unique
-  emailVerified DateTime?
+  emailVerified DateTime? @map("email_verified")
   password      String?
   role          Role      @default(user)
   image         String?
 
   address UserAddress?
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relaciones
-  Order    Order[]
-  Favorite Favorite[]
-  Account  Account[]
-  Session  Session[]
+  Order     Order[]
+  Favorite  Favorite[]
+  Account   Account[]
+  Session   Session[]
+  SearchLog SearchLog[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
 }
 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ===================================
+// BÚSQUEDAS (Analytics)
+// ===================================
+model SearchLog {
+  id           String   @id @default(uuid())
+  term         String
+  resultsCount Int
+  userId       String?
+  timestamp    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([term])
+  @@index([timestamp])
+  @@index([userId])
+  @@index([term, timestamp]) // para trending
+  @@map("search_logs")
+}
+
+// ===================================
+// DIRECCIONES Y PAÍSES
+// ===================================
 model Country {
   id   String @id
   name String
 
   UserAddress  UserAddress[]
   OrderAddress OrderAddress[]
+
+  @@map("countries")
 }
 
 model UserAddress {
@@ -156,15 +600,20 @@ model UserAddress {
   phone      String
   city       String
 
-  // Relaciones
   country   Country @relation(fields: [countryId], references: [id])
   countryId String
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
+
+  @@index([userId])
+  @@index([countryId])
+  @@map("user_addresses")
 }
 
-// Order de compras
+// ===================================
+// ÓRDENES
+// ===================================
 model Order {
   id           String    @id @default(uuid())
   subTotal     Float
@@ -177,7 +626,6 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relaciones
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
@@ -185,20 +633,35 @@ model Order {
   OrderAddress OrderAddress?
 
   transactionId String?
+
+  @@index([userId])
+  @@index([isPaid])
+  @@index([createdAt])
+  @@map("orders")
 }
 
 model OrderItem {
   id       String @id @default(uuid())
   quantity Int
   price    Float
-  size     Size   @default(GENERIC)
-  color    String @default("GENERIC")
-  // Relaciones
-  order    Order  @relation(fields: [orderId], references: [id])
-  orderId  String
+
+  // Snapshot de la variante al momento de compra
+  variantSnapshot Json // { color: "Rojo", size: "M", sku: "..." }
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
 
   product   Product @relation(fields: [productId], references: [id])
   productId String
+
+  // Referencia a la variante (puede ser null si se eliminó)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  variantId String?
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
+  @@map("order_items")
 }
 
 model OrderAddress {
@@ -211,19 +674,12 @@ model OrderAddress {
   city       String
   phone      String
 
-  // Relaciones
   country   Country @relation(fields: [countryId], references: [id])
   countryId String
 
-  Order   Order  @relation(fields: [orderId], references: [id])
+  Order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId String @unique
-}
 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
+  @@index([orderId])
+  @@map("order_addresses")
 }

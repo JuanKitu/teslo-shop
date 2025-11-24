@@ -1,13 +1,14 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import type { Size } from '@/interfaces';
+import { findVariantByColorAndSize } from '@/utils';
+import { mapPrismaVariants } from '@/utils';
 
 export interface CartItemInput {
   slug: string;
   quantity: number;
   color?: string;
-  size?: Size;
+  size?: string;
 }
 
 export interface ValidateCartResult {
@@ -15,7 +16,7 @@ export interface ValidateCartResult {
   adjustedItems?: {
     slug: string;
     color?: string;
-    size?: Size;
+    size?: string;
     newQuantity: number;
     title: string;
   }[];
@@ -23,7 +24,7 @@ export interface ValidateCartResult {
 }
 
 /**
- * Valida el stock de todos los productos del carrito contra la BD.
+ * Válida el stock de MÚLTIPLES productos del carrito contra la BD.
  * Si alguno tiene menos stock que el solicitado, devuelve los ajustes.
  */
 export async function validateCartStock(cartItems: CartItemInput[]): Promise<ValidateCartResult> {
@@ -32,26 +33,80 @@ export async function validateCartStock(cartItems: CartItemInput[]): Promise<Val
 
     const slugs = cartItems.map((item) => item.slug);
 
-    // Traemos productos y sus variantes
+    // 📦 Traemos productos y sus variantes con optionValues e images
     const productsInDb = await prisma.product.findMany({
-      where: { slug: { in: slugs } },
-      include: { variants: true },
+      where: {
+        slug: { in: slugs },
+        isActive: true,
+        deletedAt: null,
+      },
+      include: {
+        variants: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            images: {
+              select: { url: true },
+              orderBy: { order: 'asc' },
+            },
+            optionValues: {
+              include: {
+                option: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const adjustedItems: ValidateCartResult['adjustedItems'] = [];
+
     for (const item of cartItems) {
       const product = productsInDb.find((p) => p.slug === item.slug);
-      if (!product) continue; // producto eliminado de la BD
 
-      // Buscar variante exacta: coincide color y talla si están definidos
-      const variant = product.variants.find((v) => {
-        const colorMatch = item.color ? v.color === item.color : true;
-        const sizeMatch = item.size ? v.size === item.size : true;
-        return colorMatch && sizeMatch;
-      });
+      // Producto no encontrado o eliminado
+      if (!product) {
+        adjustedItems.push({
+          slug: item.slug,
+          color: item.color,
+          size: item.size,
+          newQuantity: 0,
+          title: 'Producto no disponible',
+        });
+        continue;
+      }
+
+      // 🔄 Mapear variantes usando la utilidad
+      const mappedVariants = mapPrismaVariants(product.variants);
+
+      // 🎯 Buscar variante específica
+      let variant;
+
+      if (item.color && item.size) {
+        // Buscar por color Y size
+        variant = findVariantByColorAndSize(mappedVariants, item.color, item.size);
+      } else if (item.color) {
+        // Solo color
+        variant = mappedVariants.find((v) => v.color?.toLowerCase() === item.color?.toLowerCase());
+      } else if (item.size) {
+        // Solo size
+        variant = mappedVariants.find((v) => v.size?.toLowerCase() === item.size?.toLowerCase());
+      } else {
+        // Sin opciones específicas, tomar la primera variante con stock
+        variant = mappedVariants.find((v) => v.inStock > 0) || mappedVariants[0];
+      }
 
       const availableStock = variant?.inStock ?? 0;
 
+      // ⚠️ Stock insuficiente
       if (availableStock < item.quantity) {
         adjustedItems.push({
           slug: item.slug,
@@ -62,6 +117,7 @@ export async function validateCartStock(cartItems: CartItemInput[]): Promise<Val
         });
       }
     }
+
     if (adjustedItems.length > 0) {
       return {
         ok: false,

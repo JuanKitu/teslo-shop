@@ -1,28 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { OrderWithDetails } from '@/interfaces';
+import { OrderAddress, OrderWithDetails } from '@/interfaces';
 import { currencyFormat } from '@/utils';
 import CardPayState from './CardPayState';
 import PaymentMethods from './PaymentMethods';
 import clsx from 'clsx';
 import { useTheme } from 'next-themes';
 
-interface Address {
-  address: string;
-  orderId: string;
-  id: string;
-  firstName: string;
-  lastName: string;
-  address2: string | null;
-  postalCode: string;
-  city: string;
-  phone: string;
-  countryId: string;
-}
-
 interface Props {
-  address: Address | null;
+  address: OrderAddress | null;
   order: OrderWithDetails;
 }
 

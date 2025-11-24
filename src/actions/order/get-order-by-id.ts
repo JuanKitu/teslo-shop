@@ -8,9 +8,11 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function getOrderById(id: string): Promise<GetOrderResult> {
   const session: Session | null = await getServerSession(authOptions);
+
   if (!session?.user) {
     return { ok: false, message: 'Debe de estar autenticado' };
   }
+
   try {
     const order = await prisma.order.findUnique({
       where: { id },
@@ -20,9 +22,25 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
           include: {
             product: {
               include: {
-                images: true,
-                variants: {
-                  include: { images: true },
+                images: {
+                  where: { variantId: null },
+                  orderBy: { order: 'asc' },
+                },
+              },
+            },
+            variant: {
+              include: {
+                images: {
+                  orderBy: { order: 'asc' },
+                },
+                optionValues: {
+                  include: {
+                    option: {
+                      select: {
+                        slug: true,
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -42,13 +60,33 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
     const orderWithDetails: OrderWithDetails = {
       ...order,
       OrderItem: order.OrderItem.map((item) => {
-        // Buscar variante (si la orden tiene color/size)
-        const variant = item.product.variants.find(
-          (v) => v.size === item.size && (v.color === item.color || !v.color)
-        );
+        // Extraer datos del snapshot (datos guardados al momento de la compra)
+        const snapshot = item.variantSnapshot as {
+          color?: string;
+          size?: string;
+          sku?: string;
+          [key: string]: unknown;
+        } | null;
 
+        // Intentar obtener color y size del snapshot primero
+        let color = snapshot?.color;
+        let size = snapshot?.size;
+
+        // Si la variante aún existe, extraer datos actuales de optionValues
+        if (item.variant) {
+          const colorOption = item.variant.optionValues.find((ov) => ov.option.slug === 'color');
+          const sizeOption = item.variant.optionValues.find((ov) => ov.option.slug === 'size');
+
+          // Usar valores actuales si no hay snapshot
+          if (!color) color = colorOption?.value;
+          if (!size) size = sizeOption?.value;
+        }
+
+        // Seleccionar imagen: primero de la variante, luego del producto
         const image =
-          variant?.images?.[0]?.url || item.product.images?.[0]?.url || '/imgs/placeholder.jpg';
+          item.variant?.images?.[0]?.url ||
+          item.product.images?.[0]?.url ||
+          '/imgs/placeholder.jpg';
 
         return {
           price: item.price,
@@ -58,8 +96,8 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
             title: item.product.title,
             slug: item.product.slug,
             image,
-            color: item.color || variant?.color,
-            size: item.size || variant?.size,
+            color: color || 'N/A',
+            size: size || 'N/A',
           },
         };
       }),
@@ -67,7 +105,7 @@ export async function getOrderById(id: string): Promise<GetOrderResult> {
 
     return { ok: true, message: '', order: orderWithDetails };
   } catch (error) {
-    console.error(error);
+    console.error('Error en getOrderById:', error);
     return {
       ok: false,
       message: error instanceof Error ? error.message : 'Error al obtener la orden',

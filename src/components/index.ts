@@ -1,3 +1,5 @@
+export { AdminMenu } from './admin/ui/admin-menu/AdminMenu';
+export { AdminMenuItem } from './admin/ui/admin-menu/AdminMenuItem';
 export { CartWarning } from './cart/CartWarning';
 export { ColorSelector } from './product/color-selector/ColorSelector';
 export { FadeImage } from './product/fade-image/FadeImage';
@@ -23,6 +25,8 @@ export { ProductMobileSlideshow } from './product/slideshow/ProductMobileSlidesh
 export { ProductSlideshow } from './product/slideshow/ProductSlideshow';
 export { Providers } from './providers/Providers';
 export { QuantitySelector } from './product/quantity-selector/QuantitySelector';
+export { SearchAnalyticsTable } from './admin/search-analytics-table/SearchAnalyticsTable';
+export { SearchBar } from './search/search-bar/SearchBar';
 export { SideBarItem } from './ui/sidebar/SideBarItem';
 export { Sidebar } from './ui/sidebar/Sidebar';
 export { SizeSelector } from './product/size-selector/SizeSelector';

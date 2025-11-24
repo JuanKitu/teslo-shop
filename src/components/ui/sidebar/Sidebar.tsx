@@ -10,7 +10,6 @@ import {
   IoLogOutOutline,
   IoPeopleOutline,
   IoPersonOutline,
-  IoSearchOutline,
   IoShirtOutline,
   IoTicketOutline,
 } from 'react-icons/io5';
@@ -40,7 +39,7 @@ export const Sidebar = () => {
 
   const handleLogin = () => {
     closeSideMenu();
-    signIn();
+    signIn().then();
   };
 
   // 🧩 Evitamos renderizar hasta montar para prevenir errores de hidratación
@@ -73,27 +72,6 @@ export const Sidebar = () => {
           )}
           onClick={closeSideMenu}
         />
-
-        {/* Buscar */}
-        <div className="relative mt-14">
-          <IoSearchOutline
-            size={20}
-            className={clsx(
-              'absolute top-2 left-2',
-              isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'
-            )}
-          />
-          <input
-            type="text"
-            placeholder="Buscar"
-            className={clsx(
-              'w-full rounded pl-10 py-2 border-b-2 text-lg focus:outline-none focus:border-blue-500 transition-colors',
-              isDark
-                ? 'bg-[var(--color-card)] border-[var(--color-border)] text-[var(--color-text)] placeholder-[var(--color-muted)] focus:border-blue-400'
-                : 'bg-gray-50 border-gray-200 text-black placeholder-gray-500'
-            )}
-          />
-        </div>
 
         <div className="relative mt-8 mb-4">
           <ThemeToggle />

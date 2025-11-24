@@ -1,19 +1,21 @@
+// actions/cart/add-to-cart.ts
 'use server';
 
 import prisma from '@/lib/prisma';
-import type { ProductVariant, Size } from '@/interfaces';
+import type { ProductVariant } from '@/interfaces';
+import { findVariantByColorAndSize, enrichVariant } from '@/utils';
 
-export interface AddToCartResult {
+export interface AddToCartResultCall {
   ok: boolean;
   message: string;
-  variant?: ProductVariant; // Variante con stock real
+  variant?: ProductVariant;
 }
 
 interface Props {
   slug: string;
   quantity: number;
   color: string;
-  size: Size;
+  size: string; // ✅ Cambiar de Size a string
 }
 
 /**
@@ -24,47 +26,101 @@ export async function addToCartWithStockValidation({
   quantity,
   color,
   size,
-}: Props): Promise<AddToCartResult> {
+}: Props): Promise<AddToCartResultCall> {
   try {
+    // Buscar producto con sus variantes
     const productInDb = await prisma.product.findFirst({
-      where: { slug },
-      include: { variants: { include: { images: true } } },
+      where: { slug, isActive: true, deletedAt: null },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        price: true,
+        variants: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            images: {
+              select: { url: true },
+              orderBy: { order: 'asc' },
+            },
+            optionValues: {
+              include: {
+                option: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!productInDb) {
       return { ok: false, message: 'Producto no encontrado' };
     }
 
-    const variantDb = productInDb.variants.find((v) => v.color === color && v.size === size);
+    // Mapear variantes al formato de la app
+    const variants: ProductVariant[] = productInDb.variants.map((v) => ({
+      id: v.id,
+      sku: v.sku,
+      price: v.price,
+      inStock: v.inStock,
+      isActive: v.isActive,
+      images: v.images.map((img) => img.url),
+      optionValues: v.optionValues.map((ov) => ({
+        id: ov.id,
+        optionId: ov.optionId,
+        optionName: ov.option.name,
+        optionSlug: ov.option.slug,
+        value: ov.value,
+      })),
+    }));
 
-    if (!variantDb) {
-      return { ok: false, message: 'Variante no encontrada para ese color/talla' };
-    }
+    // Buscar la variante específica
+    const variant = findVariantByColorAndSize(variants, color, size);
 
-    // Mapear al formato de tu app
-    const variant: ProductVariant = {
-      color: variantDb.color ?? '',
-      size: variantDb.size as Size,
-      stock: variantDb.inStock,
-      price: variantDb.price,
-      images: variantDb.images.map((img) => img.url),
-    };
-
-    if (variant.stock <= 0) {
-      return { ok: false, message: 'Sin stock disponible', variant };
-    }
-
-    if (variant.stock < quantity) {
+    if (!variant) {
       return {
         ok: false,
-        message: `Solo quedan ${variant.stock} unidades en color ${color} talla ${size}`,
-        variant,
+        message: `No existe la combinación ${color} / ${size}`,
       };
     }
 
-    return { ok: true, message: 'Producto agregado al carrito', variant };
+    // Validar stock
+    if (variant.inStock <= 0) {
+      return {
+        ok: false,
+        message: `Sin stock disponible para ${color} / ${size}`,
+        variant: enrichVariant(variant),
+      };
+    }
+
+    if (variant.inStock < quantity) {
+      return {
+        ok: false,
+        message: `Solo quedan ${variant.inStock} unidades de ${color} / ${size}`,
+        variant: enrichVariant(variant),
+      };
+    }
+
+    // Todo OK
+    return {
+      ok: true,
+      message: 'Producto agregado al carrito',
+      variant: enrichVariant(variant),
+    };
   } catch (error) {
-    console.error(error);
-    return { ok: false, message: 'Error al verificar disponibilidad del producto' };
+    console.error('Error en addToCartWithStockValidation:', error);
+    return {
+      ok: false,
+      message: 'Error al verificar disponibilidad del producto',
+    };
   }
 }
