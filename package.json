@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "npm run prisma:deploy && next build --turbopack",
-    "build:dev": "next build --turbopack",
+    "dev": "next dev",
+    "build": "npm run prisma:deploy && next build",
+    "build:dev": "next build",
     "start": "next start",
     "seed": "ts-node src/seed/seed-database.ts",
     "prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
