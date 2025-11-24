@@ -1,3 +1,4 @@
+// actions/category/get-category-by-slug.ts
 'use server';
 
 import prisma from '@/lib/prisma';
@@ -18,7 +19,18 @@ export async function getCategoryBySlug(slug: string) {
         metaTitle: true,
         metaDescription: true,
         metaKeywords: true,
-        isFeatured: true,
+        children: {
+          // ← NUEVO
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
       },
     });
   } catch (error) {

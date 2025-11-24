@@ -9,14 +9,7 @@ import { titleFont } from '@/app/config/fonts';
 import { useCartStore, useUiStore, useFavoriteStore } from '@/store';
 import { SearchBar } from '@/components';
 
-interface Props {
-  categories: Array<{
-    name: string;
-    slug: string;
-  }>;
-}
-
-export function TopMenu({ categories }: Props) {
+export function TopMenu() {
   const openMenu = useUiStore((state) => state.openSideMenu);
   const getTotalItems = useCartStore((state) => state.getTotalItems());
   const { favorites } = useFavoriteStore();
@@ -32,7 +25,7 @@ export function TopMenu({ categories }: Props) {
   const isDark = theme === 'dark';
 
   return (
-    <nav className="flex flex-col gap-4 px-5 py-4 w-full">
+    <nav className="flex flex-col gap-4 px-0 sm:px-10 py-4 w-full">
       {/* Fila superior: Logo, Búsqueda, Acciones */}
       <div className="flex justify-between items-center w-full gap-4">
         {/* Logo */}
@@ -83,24 +76,8 @@ export function TopMenu({ categories }: Props) {
         </div>
       </div>
 
-      {/* Fila inferior: Categorías y búsqueda mobile */}
-      <div className="flex items-center justify-between gap-4">
-        {/* Categorías dinámicas */}
-        <div className="hidden sm:flex gap-2">
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              className={clsx(
-                'px-3 py-1.5 rounded-md transition-all text-sm',
-                isDark ? 'hover:bg-[#222]' : 'hover:bg-gray-100'
-              )}
-              href={`/category/${category.slug}`}
-            >
-              {category.name}
-            </Link>
-          ))}
-        </div>
-
+      {/* Fila inferior: Búsqueda mobile */}
+      <div className="flex items-center justify-between gap-4 px-5 sm:px-0">
         {/* Búsqueda en mobile */}
         <div className="flex md:hidden w-full">
           <SearchBar />

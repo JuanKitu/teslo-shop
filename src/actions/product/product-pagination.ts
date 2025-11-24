@@ -9,14 +9,24 @@ interface PaginationOptions {
   page?: number;
   take?: number;
   categorySlug?: string;
+  subcategorySlug?: string; // ← NUEVO
   brandSlug?: string;
+  color?: string;
+  size?: string;
+  brand?: string;
+  maxPrice?: number;
 }
 
 export const getPaginatedProductsWithImages = async ({
   page = 1,
   take = 12,
   categorySlug,
+  subcategorySlug, // ← NUEVO
   brandSlug,
+  color,
+  size,
+  brand,
+  maxPrice,
 }: PaginationOptions): Promise<{
   currentPage: number;
   totalPages: number;
@@ -25,14 +35,26 @@ export const getPaginatedProductsWithImages = async ({
   if (isNaN(Number(page)) || page < 1) page = 1;
 
   try {
-    // 🔍 Construir filtros dinámicos usando tipo de Prisma
+    // 🔍 Construir filtros dinámicos
     const where: Prisma.ProductWhereInput = {
       isActive: true,
       deletedAt: null,
     };
 
-    // Filtrar por categoría
-    if (categorySlug) {
+    // 📁 Filtrar por categoría O subcategoría
+    if (subcategorySlug) {
+      // Si hay subcategoría, priorizar sobre categoría
+      where.categories = {
+        some: {
+          category: {
+            slug: subcategorySlug,
+            isActive: true,
+            deletedAt: null,
+          },
+        },
+      };
+    } else if (categorySlug) {
+      // Si solo hay categoría, filtrar por ella
       where.categories = {
         some: {
           category: {
@@ -44,15 +66,57 @@ export const getPaginatedProductsWithImages = async ({
       };
     }
 
-    // Filtrar por marca
-    if (brandSlug) {
+    // 🏷️ Filtrar por marca (brandSlug de ruta o brand de filtro)
+    if (brand || brandSlug) {
       where.brands = {
         some: {
           brand: {
-            slug: brandSlug,
+            slug: brand || brandSlug,
             isActive: true,
             deletedAt: null,
           },
+        },
+      };
+    }
+
+    // 💰 Filtrar por precio máximo
+    if (maxPrice) {
+      where.price = {
+        lte: maxPrice,
+      };
+    }
+
+    // 🎨 Filtros por variantes (color y/o size)
+    if (color || size) {
+      const variantFilters: Prisma.ProductVariantWhereInput[] = [];
+
+      if (color) {
+        variantFilters.push({
+          optionValues: {
+            some: {
+              option: { slug: 'color' },
+              value: color,
+            },
+          },
+        });
+      }
+
+      if (size) {
+        variantFilters.push({
+          optionValues: {
+            some: {
+              option: { slug: 'size' },
+              value: size,
+            },
+          },
+        });
+      }
+
+      where.variants = {
+        some: {
+          isActive: true,
+          deletedAt: null,
+          AND: variantFilters,
         },
       };
     }
@@ -92,7 +156,7 @@ export const getPaginatedProductsWithImages = async ({
             },
           },
         },
-        orderBy: { title: 'asc' },
+        orderBy: { createdAt: 'desc' },
       }),
       prisma.product.count({ where }),
     ]);
@@ -101,7 +165,7 @@ export const getPaginatedProductsWithImages = async ({
 
     // 🧠 Transformar usando las utilidades de mapeo
     const formattedProducts: Product[] = products.map((product) => {
-      // Mapear variantes de Prisma usando la utilidad
+      // Mapear variantes de Prisma
       const mappedVariants = mapPrismaVariants(product.variants);
 
       // Recolectar todas las imágenes únicas
@@ -127,7 +191,7 @@ export const getPaginatedProductsWithImages = async ({
         tags: product.tags,
         images: allImages.length > 0 ? allImages : ['/placeholder.png'],
 
-        // Stock total (suma de todas las variantes)
+        // Stock total
         inStock: mappedVariants.reduce((acc, v) => acc + v.inStock, 0),
 
         // Variantes mapeadas

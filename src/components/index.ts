@@ -16,6 +16,7 @@ export { OrderTable } from './orders/OrderTable';
 export { OrderTemplate } from './orders/OrderTemplate';
 export { PageNotFound } from './ui/not-found/PageNotFound';
 export { Pagination } from './ui/pagination/Pagination';
+export { LeftBar } from './ui/left-bar/LeftBar';
 export { PaypalButton } from './paypal/PaypalButton';
 export { ProductGrid } from './products/product-grid/ProductGrid';
 export { ProductGridItem } from './products/product-grid/product-grid-item/ProductGridItem';
