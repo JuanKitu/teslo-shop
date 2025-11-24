@@ -2,13 +2,43 @@
 
 import { getPaginatedProductsWithImages } from '@/actions';
 
-export async function loadMoreProducts(page: number, categorySlug?: string, brandSlug?: string) {
-  const { products } = await getPaginatedProductsWithImages({
-    page,
-    take: 12,
-    categorySlug,
-    brandSlug,
-  });
+interface LoadMoreOptions {
+  page: number;
+  categorySlug?: string;
+  subcategorySlug?: string; // ← NUEVO
+  brandSlug?: string;
+  color?: string;
+  size?: string;
+  brand?: string;
+  maxPrice?: number;
+}
 
-  return products;
+export async function loadMoreProducts({
+  page,
+  categorySlug,
+  subcategorySlug, // ← NUEVO
+  brandSlug,
+  color,
+  size,
+  brand,
+  maxPrice,
+}: LoadMoreOptions) {
+  try {
+    const { products } = await getPaginatedProductsWithImages({
+      page,
+      take: 12,
+      categorySlug,
+      subcategorySlug, // ← NUEVO
+      brandSlug,
+      color,
+      size,
+      brand: brand || brandSlug,
+      maxPrice,
+    });
+
+    return products;
+  } catch (error) {
+    console.error('[loadMoreProducts]', error);
+    return [];
+  }
 }
