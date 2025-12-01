@@ -38,6 +38,7 @@ interface VariantOptionsListProps {
   isDark: boolean;
   onSearch: (term: string) => void;
   onSelectOption: (option: VariantOption) => void;
+  onEditOption: (option: VariantOption) => void;
   onDeleteOption: (optionId: string) => void;
 }
 
@@ -48,6 +49,7 @@ export function VariantOptionsList({
   isDark,
   onSearch,
   onSelectOption,
+  onEditOption,
   onDeleteOption,
 }: VariantOptionsListProps) {
   const filteredOptions = options.filter((opt) =>
@@ -100,6 +102,7 @@ export function VariantOptionsList({
                 isSelected={selectedOptionId === option.id}
                 isDark={isDark}
                 onSelect={() => onSelectOption(option)}
+                onEdit={() => onEditOption(option)}
                 onDelete={() => onDeleteOption(option.id)}
               />
             ))}

@@ -1,18 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { IoSearch } from 'react-icons/io5';
 import { useTheme } from 'next-themes';
 
 export function ProductFilters() {
   const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
 
-  const isDark = theme === 'dark';
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Evitar hidratación con tema antes de montar
+  const isDark = mounted && theme === 'dark';
 
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">

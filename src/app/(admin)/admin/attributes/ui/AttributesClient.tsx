@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
   createVariantOption,
+  updateVariantOption,
   deleteVariantOption,
   createGlobalValue,
   deleteGlobalValue,
@@ -56,6 +57,7 @@ export function AttributesClient({ initialOptions }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [newOptionName, setNewOptionName] = useState('');
   const [newOptionType, setNewOptionType] = useState<OptionType>('TEXT');
+  const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state for adding global values
@@ -78,6 +80,33 @@ export function AttributesClient({ initialOptions }: Props) {
 
     setIsSubmitting(true);
     try {
+      // Si está editando, actualizar en lugar de crear
+      if (editingOptionId) {
+        const result = await updateVariantOption({
+          id: editingOptionId,
+          name: newOptionName,
+          type: newOptionType,
+        });
+
+        if (result.ok && result.option) {
+          // Actualizar en la lista local
+          setOptions(options.map((opt) => (opt.id === editingOptionId ? result.option! : opt)));
+          // Si era la opción seleccionada, actualizarla también
+          if (selectedOption?.id === editingOptionId) {
+            setSelectedOption(result.option);
+          }
+          setNewOptionName('');
+          setNewOptionType('TEXT');
+          setEditingOptionId(null);
+          setIsSubmitting(false);
+          router.refresh();
+          return;
+        } else {
+          alert(result.message);
+          setIsSubmitting(false);
+          return;
+        }
+      }
       console.log('Creating variant option:', { name: newOptionName, type: newOptionType });
       const result = await createVariantOption({
         name: newOptionName,
@@ -130,6 +159,19 @@ export function AttributesClient({ initialOptions }: Props) {
     } else {
       alert(result.message);
     }
+  };
+  const handleEditOption = (option: VariantOption) => {
+    setNewOptionName(option.name);
+    setNewOptionType(option.type);
+    setEditingOptionId(option.id);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setNewOptionName('');
+    setNewOptionType('TEXT');
+    setEditingOptionId(null);
   };
 
   const handleAddValue = async () => {
@@ -223,11 +265,13 @@ export function AttributesClient({ initialOptions }: Props) {
         <VariantOptionForm
           newOptionName={newOptionName}
           newOptionType={newOptionType}
+          editingId={editingOptionId}
           isSubmitting={isSubmitting}
           isDark={isDark}
           onNameChange={setNewOptionName}
           onTypeChange={setNewOptionType}
           onSubmit={handleAddOption}
+          onCancel={handleCancelEdit}
         />
 
         <VariantOptionsList
@@ -237,6 +281,7 @@ export function AttributesClient({ initialOptions }: Props) {
           isDark={isDark}
           onSearch={setSearchTerm}
           onSelectOption={setSelectedOption}
+          onEditOption={handleEditOption}
           onDeleteOption={handleDeleteOption}
         />
       </div>
