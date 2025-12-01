@@ -36,6 +36,7 @@ export * from './payments/mercadopago-create-preference';
 export * from './payments/set-transaction-id';
 export * from './product/create-update-product';
 export * from './product/delete-product-image';
+export * from './product/get-all-products-admin';
 export * from './product/get-product-by-slug';
 export * from './product/get-product-by-slug-admin';
 export * from './product/get-stock-by-slug';
