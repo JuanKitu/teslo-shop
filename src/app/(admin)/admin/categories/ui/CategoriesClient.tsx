@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { TabsNavigation } from '@/components';
@@ -8,6 +8,7 @@ import { createCategory, deleteCategory, updateCategory, uploadImages } from '@/
 import { CategoryFilters } from './CategoryFilters';
 import { CategoryList } from './CategoryList';
 import { CategoryForm } from './CategoryForm';
+import { fuzzyFilter } from '@/utils/search/fuzzy-search';
 
 interface Category {
   id: string;
@@ -70,6 +71,32 @@ export function CategoriesClient({ initialCategories }: Props) {
     setMounted(true);
   }, []);
 
+  const isDark = mounted && theme === 'dark';
+
+  // Filtrar categorías con fuzzy search
+  const filteredCategories = useMemo(() => {
+    let result = categories;
+
+    // 1. Búsqueda fuzzy por nombre
+    if (searchTerm.trim()) {
+      result = fuzzyFilter(
+        result,
+        searchTerm,
+        (cat) => cat.name,
+        50 // threshold permisivo
+      );
+    }
+
+    // 2. Filtrar por padre
+    if (filterParent === 'main') {
+      result = result.filter((cat) => !cat.parentId);
+    } else if (filterParent !== 'all') {
+      result = result.filter((cat) => cat.parentId === filterParent);
+    }
+
+    return result;
+  }, [categories, searchTerm, filterParent]);
+
   if (!mounted) {
     return (
       <div className="space-y-6">
@@ -78,15 +105,6 @@ export function CategoriesClient({ initialCategories }: Props) {
       </div>
     );
   }
-
-  const isDark = theme === 'dark';
-
-  // Filter categories
-  const filteredCategories = categories.filter((cat) => {
-    const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterParent === 'all' || (filterParent === 'main' && !cat.parentId);
-    return matchesSearch && matchesFilter;
-  });
 
   const handleFormChange = (data: Partial<typeof formData>) => {
     setFormData({ ...formData, ...data });
@@ -227,9 +245,9 @@ export function CategoriesClient({ initialCategories }: Props) {
 
           <CategoryList
             categories={filteredCategories}
-            isDark={isDark}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            isDark={isDark}
           />
         </div>
 
