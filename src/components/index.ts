@@ -1,6 +1,7 @@
 export { AdminMenu } from './admin/ui/admin-menu/AdminMenu';
 export { AdminMenuItem } from './admin/ui/admin-menu/AdminMenuItem';
 export { CartWarning } from './cart/CartWarning';
+export { CategoryBadge } from './ui/category-badge/CategoryBadge';
 export { ColorSelector } from './product/color-selector/ColorSelector';
 export { FadeImage } from './product/fade-image/FadeImage';
 export { FavoriteButton } from './product/favorite-button/FavoriteButton';
@@ -32,7 +33,9 @@ export { SideBarItem } from './ui/sidebar/SideBarItem';
 export { Sidebar } from './ui/sidebar/Sidebar';
 export { SizeSelector } from './product/size-selector/SizeSelector';
 export { StockLabel } from './product/stock-label/StockLabel';
+export { TabsNavigation } from './ui/tabs-navigation/TabsNavigation';
 export { ThemeToggle } from './theme/ThemeToggle';
 export { Title } from './ui/title/Title';
+export { ToggleSwitch } from './ui/toggle-switch/ToggleSwitch';
 export { TopMenu } from './ui/top-menu/TopMenu';
 export { VariantImagePicker } from './product/variant-image-picker/VariantImagePicker';

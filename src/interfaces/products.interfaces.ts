@@ -76,6 +76,11 @@ export interface Product {
   availableColors: string[];
   availableSizes: string[];
 
+  // 🆕 Estado y visibilidad (del schema Prisma)
+  isActive?: boolean;
+  isHidden?: boolean;
+  isFeatured?: boolean;
+
   // 🆕 Categorías (opcional - solo para admin/detalle)
   categories?: ProductCategory[];
 

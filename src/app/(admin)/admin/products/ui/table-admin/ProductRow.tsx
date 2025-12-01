@@ -1,7 +1,8 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { ProductImage } from '@/components';
+import { MdEdit, MdContentCopy, MdDelete } from 'react-icons/md';
+import { ProductImage, ToggleSwitch } from '@/components';
 import { currencyFormat } from '@/utils';
 import { getTableStyles } from './tableStyles';
 import { useProductVariants } from './hooks/useProductVariants';
@@ -10,6 +11,8 @@ import type { ProductRowProps } from './table.interface';
 const ProductRow = memo(({ product, isDark }: ProductRowProps) => {
   const firstImage = product.images?.[0] || '/placeholder.jpg';
   const styles = getTableStyles(isDark);
+  const [isActive, setIsActive] = useState(product.isActive ?? true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { totalInventory, availableSizes, availableColors, priceRange, inventoryStatus } =
     useProductVariants(product);
@@ -30,6 +33,26 @@ const ProductRow = memo(({ product, isDark }: ProductRowProps) => {
       default:
         return '';
     }
+  };
+
+  const handleToggle = async (checked: boolean) => {
+    setIsActive(checked);
+    // TODO: Implement update product active status
+    console.log('Toggle product active:', product.id, checked);
+  };
+
+  const handleDuplicate = () => {
+    // TODO: Implement duplicate product
+    console.log('Duplicate product:', product.id);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`¿Estás seguro de eliminar "${product.title}"?`)) return;
+
+    setIsDeleting(true);
+    // TODO: Implement delete product
+    console.log('Delete product:', product.id);
+    setIsDeleting(false);
   };
 
   return (
@@ -114,6 +137,60 @@ const ProductRow = memo(({ product, isDark }: ProductRowProps) => {
             <span className="font-semibold text-xs text-gray-600 dark:text-gray-400">Colores:</span>
             <p className="text-xs truncate capitalize">{availableColors}</p>
           </div>
+        </div>
+      </td>
+
+      {/* Acciones */}
+      <td className="px-6 py-4 whitespace-nowrap text-right">
+        <div className="flex justify-end items-center gap-2">
+          {/* Edit Button */}
+          <Link
+            href={`/admin/product/${product.slug}`}
+            className={clsx(
+              'p-1.5 rounded-md transition-colors',
+              isDark
+                ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
+                : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+            )}
+            title="Editar"
+          >
+            <MdEdit size={18} />
+          </Link>
+
+          {/* Duplicate Button */}
+          <button
+            onClick={handleDuplicate}
+            className={clsx(
+              'p-1.5 rounded-md transition-colors',
+              isDark
+                ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
+                : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+            )}
+            title="Duplicar"
+          >
+            <MdContentCopy size={18} />
+          </button>
+
+          {/* Toggle Active/Inactive */}
+          <ToggleSwitch
+            checked={isActive}
+            onChange={handleToggle}
+            ariaLabel={`${isActive ? 'Desactivar' : 'Activar'} ${product.title}`}
+          />
+
+          {/* Delete Button */}
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={clsx(
+              'p-1.5 rounded-md transition-colors',
+              'hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500',
+              isDeleting && 'opacity-50 cursor-not-allowed'
+            )}
+            title="Eliminar"
+          >
+            <MdDelete size={18} />
+          </button>
         </div>
       </td>
     </tr>
