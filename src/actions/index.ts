@@ -44,6 +44,7 @@ export * from './product/load-more-products';
 export * from './product/product-pagination';
 export * from './product/upload-image';
 export * from './variant-options/get-all-variant-options';
+export * from './variant-options/get-variant-options-with-values';
 export * from './variant-options/create-variant-option';
 export * from './variant-options/update-variant-option';
 export * from './variant-options/delete-variant-option';

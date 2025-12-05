@@ -288,17 +288,50 @@ export function AttributesClient({ initialOptions }: Props) {
 
       {/* Right Column - Global Values */}
       <div className="lg:col-span-2">
-        <GlobalValuesPanel
-          selectedOption={selectedOption}
-          newValue={newValue}
-          newColorHex={newColorHex}
-          isAddingValue={isAddingValue}
-          isDark={isDark}
-          onValueChange={setNewValue}
-          onColorChange={setNewColorHex}
-          onAddValue={handleAddValue}
-          onDeleteValue={handleDeleteValue}
-        />
+        {selectedOption && selectedOption.type !== 'TEXT' && selectedOption.type !== 'NUMBER' ? (
+          <GlobalValuesPanel
+            selectedOption={selectedOption}
+            newValue={newValue}
+            newColorHex={newColorHex}
+            isAddingValue={isAddingValue}
+            isDark={isDark}
+            onValueChange={setNewValue}
+            onColorChange={setNewColorHex}
+            onAddValue={handleAddValue}
+            onDeleteValue={handleDeleteValue}
+          />
+        ) : selectedOption ? (
+          <div
+            className={`p-8 rounded-lg border-2 border-dashed ${
+              isDark
+                ? 'bg-gray-800/50 border-gray-700 text-gray-400'
+                : 'bg-gray-50 border-gray-300 text-gray-600'
+            }`}
+          >
+            <div className="text-center">
+              <p className="text-lg font-medium mb-2">Entrada de texto libre</p>
+              <p className="text-sm">
+                Los atributos de tipo{' '}
+                <strong>{selectedOption.type === 'TEXT' ? 'Texto' : 'Número'}</strong> permiten
+                entrada libre.
+                <br />
+                No necesitas definir valores predeterminados.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`p-8 rounded-lg border-2 border-dashed ${
+              isDark
+                ? 'bg-gray-800/50 border-gray-700 text-gray-500'
+                : 'bg-gray-50 border-gray-300 text-gray-400'
+            }`}
+          >
+            <p className="text-center">
+              Selecciona una opción de la izquierda para gestionar sus valores
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

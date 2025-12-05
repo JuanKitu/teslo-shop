@@ -11,6 +11,7 @@ export const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
   brands,
   isValid,
   errorMessage,
+  isSubmitting,
   isDark,
 }) => {
   const styles = getFormStyles(isDark);
@@ -131,8 +132,12 @@ export const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
       </div>
 
       {/* Botón Submit */}
-      <button type="submit" disabled={!isValid} className={styles.button.primary(isValid)}>
-        Guardar producto
+      <button
+        type="submit"
+        disabled={!isValid || isSubmitting}
+        className={styles.button.primary(isValid && !isSubmitting)}
+      >
+        {isSubmitting ? 'Guardando...' : 'Guardar producto'}
       </button>
 
       {/* Error Message */}
