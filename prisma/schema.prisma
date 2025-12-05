@@ -183,11 +183,45 @@ model VariantOption {
   // 🔗 Relaciones
   productOptions ProductVariantOption[]
   variantValues  VariantOptionValue[]
+  globalValues   GlobalVariantValue[] // valores predefinidos globales
 
   @@index([slug])
   @@index([position])
   @@index([isFilterable])
   @@map("variant_options")
+}
+
+// ===================================
+// VALORES GLOBALES DE VARIANTE (estilo WooCommerce/Shopify)
+// ===================================
+model GlobalVariantValue {
+  id       String @id @default(uuid())
+  optionId String
+
+  // 📝 Valor del atributo
+  value String // "Rojo", "M", "128GB"
+  label String? // Nombre para mostrar si es diferente
+
+  // 🎨 Para colores
+  colorHex String? // "#FF0000"
+
+  // 🖼️ Para imágenes/texturas
+  imageUrl String?
+
+  // 📊 Metadata
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  option VariantOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, value])
+  @@index([optionId])
+  @@index([order])
+  @@index([isActive])
+  @@map("global_variant_values")
 }
 
 // ===================================

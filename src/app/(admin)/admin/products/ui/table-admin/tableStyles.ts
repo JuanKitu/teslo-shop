@@ -32,7 +32,8 @@ export const TABLE_HEADERS = [
   'Imagen',
   'Título',
   'Precio',
-  'Género',
+  'Categoría',
   'Inventario',
-  'Tallas',
+  'Tallas y Colores',
+  'Acciones',
 ] as const;

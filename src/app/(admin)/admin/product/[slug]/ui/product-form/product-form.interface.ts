@@ -1,9 +1,22 @@
 import type { UseFormRegister, FieldErrors, Control, FieldArrayWithId } from 'react-hook-form';
 import type { Product, Category } from '@/interfaces';
 
+// Dynamic variant option value
+export interface VariantOptionValue {
+  optionId: string; // ID de la VariantOption (Color, Size, etc.)
+  value: string; // Valor seleccionado ("Red", "Large", etc.)
+  globalValueId?: string; // ID del GlobalValue si fue seleccionado de la lista
+}
+
 export interface VariantInput {
-  color: string;
-  size: string;
+  // Dynamic attributes (new system)
+  optionValues?: VariantOptionValue[];
+
+  // Legacy fields (for backward compatibility)
+  color?: string;
+  size?: string;
+
+  // Common fields
   price: number;
   inStock: number;
   sku?: string;
@@ -54,9 +67,10 @@ export type ProductFormData = Product & {
 };
 
 export interface ProductFormProps {
-  product?: ProductFormData; // ✅ Compatible con Product
+  product?: ProductFormData; //  ✅ Compatible con Product
   categories: Category[];
   brands?: Brand[];
+  variantOptions: VariantOptionWithValues[];
 }
 
 export interface Brand {
@@ -73,6 +87,7 @@ export interface ProductInfoSectionProps {
   brands?: Brand[];
   isValid: boolean;
   errorMessage: string | null;
+  isSubmitting: boolean;
   isDark: boolean;
 }
 
@@ -85,8 +100,24 @@ export interface VariantsSectionProps {
   combinedImages: string[];
   isDark: boolean;
 }
-export interface Brand {
+
+// Variant option with global values (from DB)
+export interface GlobalValue {
+  id: string;
+  value: string;
+  colorHex: string | null;
+  order: number;
+}
+
+export interface VariantOptionWithValues {
   id: string;
   name: string;
   slug: string;
+  type: 'TEXT' | 'COLOR' | 'SIZE' | 'SELECT' | 'NUMBER';
+  description: string | null;
+  placeholder: string | null;
+  isRequired: boolean;
+  isFilterable: boolean;
+  position: number;
+  globalValues: GlobalValue[];
 }

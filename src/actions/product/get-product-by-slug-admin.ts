@@ -99,11 +99,10 @@ export async function getProductBySlugForAdmin(slug: string) {
       availableColors,
       availableSizes,
 
-      // ✅ Incluir TODOS los campos de ProductCategory
       categories: product.categories.map((pc) => ({
         categoryId: pc.categoryId,
-        isPrimary: pc.isPrimary, // ✅ Agregar
-        order: pc.order, // ✅ Agregar
+        isPrimary: pc.isPrimary,
+        order: pc.order,
         category: {
           id: pc.category.id,
           name: pc.category.name,
@@ -111,11 +110,10 @@ export async function getProductBySlugForAdmin(slug: string) {
         },
       })),
 
-      // ✅ Incluir TODOS los campos de ProductBrand
       brands: product.brands.map((pb) => ({
         brandId: pb.brandId,
-        isPrimary: pb.isPrimary, // ✅ Agregar
-        order: pb.order, // ✅ Agregar
+        isPrimary: pb.isPrimary,
+        order: pb.order,
         brand: {
           id: pb.brand.id,
           name: pb.brand.name,
