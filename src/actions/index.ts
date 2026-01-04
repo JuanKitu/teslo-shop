@@ -13,6 +13,7 @@ export * from './categories/create-category';
 export * from './categories/update-category';
 export * from './categories/delete-category';
 export * from './categories/update-categories-order';
+export * from './category/reorder-categories';
 export * from './category/get-category-by-slug';
 export * from './country/get-countries';
 export * from './left-bar/get-categories-bar';
