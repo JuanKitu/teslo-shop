@@ -228,6 +228,47 @@ export function CategoriesClient({ initialCategories }: Props) {
     }
   };
 
+  const handleReorder = async (
+    categoryId: string,
+    newOrder: number,
+    newParentId?: string | null
+  ) => {
+    // Import the action at top of file
+    const { reorderCategories } = await import('@/actions');
+
+    // Optimistic update
+    const oldCategories = [...categories];
+
+    // Update local state immediately
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId ? { ...cat, order: newOrder, parentId: newParentId || null } : cat
+      )
+    );
+
+    try {
+      const result = await reorderCategories({
+        categoryId,
+        newOrder,
+        newParentId,
+      });
+
+      if (!result.ok) {
+        // Revert on error
+        setCategories(oldCategories);
+        alert(result.message || 'Error al reordenar categoría');
+      } else {
+        // Refresh to get updated order for all siblings
+        router.refresh();
+      }
+    } catch (error) {
+      // Revert on error
+      setCategories(oldCategories);
+      console.error('Error reordering:', error);
+      alert('Error al reordenar categoría');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <TabsNavigation tabs={tabs} />
@@ -247,6 +288,7 @@ export function CategoriesClient({ initialCategories }: Props) {
             categories={filteredCategories}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onReorder={handleReorder}
             isDark={isDark}
           />
         </div>

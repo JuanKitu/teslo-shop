@@ -2,7 +2,22 @@
 
 import React from 'react';
 import clsx from 'clsx';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+  DropAnimation,
+  rectIntersection,
+} from '@dnd-kit/core';
 import { CategoryItem } from './CategoryItem';
+import { useCategoryHierarchy } from './hooks/useCategoryHierarchy';
+import { useCategoryDrag } from './hooks/useCategoryDrag';
+import { RootDropZone } from './components/RootDropZone';
+import { CategoryTree } from './components/CategoryTree';
 
 interface Category {
   id: string;
@@ -33,55 +48,91 @@ interface CategoryListProps {
   isDark: boolean;
   onEdit: (category: Category) => void;
   onDelete: (categoryId: string) => void;
+  onReorder: (categoryId: string, newOrder: number, newParentId?: string | null) => void;
 }
 
-export function CategoryList({ categories, isDark, onEdit, onDelete }: CategoryListProps) {
-  // Build category map for children
-  const categoryMap = new Map<string, Category[]>();
-  categories.forEach((cat) => {
-    if (cat.parentId) {
-      if (!categoryMap.has(cat.parentId)) {
-        categoryMap.set(cat.parentId, []);
-      }
-      categoryMap.get(cat.parentId)!.push(cat);
-    }
+const dropAnimation: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0.5',
+      },
+    },
+  }),
+};
+
+export function CategoryList({
+  categories,
+  isDark,
+  onEdit,
+  onDelete,
+  onReorder,
+}: CategoryListProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
+  const { categoryMap, mainCategories, isDescendant } = useCategoryHierarchy(categories);
+
+  const { activeId, activeCategory, handleDragStart, handleDragEnd } = useCategoryDrag({
+    categories,
+    categoryMap,
+    mainCategories,
+    isDescendant,
+    onReorder,
   });
 
-  const mainCategories = categories.filter((c) => !c.parentId);
-
-  const renderCategory = (category: Category, level: number = 0): React.ReactNode => {
-    const children = categoryMap.get(category.id) || [];
-
-    return (
-      <div key={category.id}>
-        <CategoryItem
-          category={category}
-          level={level}
-          isDark={isDark}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-
-        {children.length > 0 && (
-          <div className="mt-2 space-y-2">
-            {children.map((child) => renderCategory(child, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div className={clsx('rounded-lg shadow-sm p-4', isDark ? 'bg-[#1f1f1f]' : 'bg-white')}>
-      {categories.length === 0 ? (
-        <p className="p-8 text-center text-gray-500 dark:text-gray-400">
-          No hay categorías disponibles
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {mainCategories.map((category) => renderCategory(category))}
-        </div>
-      )}
-    </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={rectIntersection}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div
+        className={clsx(
+          'relative min-h-[500px] rounded-lg shadow-sm bg-gray-50/50 dark:bg-[#1f1f1f]',
+          isDark ? 'text-white' : 'text-gray-900'
+        )}
+      >
+        <RootDropZone isDragging={!!activeId} isDark={isDark}>
+          <div className="relative z-10 w-full">
+            {categories.length === 0 ? (
+              <p className="p-8 text-center text-gray-500 dark:text-gray-400">
+                No hay categorías disponibles
+              </p>
+            ) : (
+              <CategoryTree
+                categories={categories}
+                categoryMap={categoryMap}
+                parentId={null}
+                level={0}
+                isDark={isDark}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            )}
+          </div>
+        </RootDropZone>
+
+        <DragOverlay dropAnimation={dropAnimation}>
+          {activeCategory ? (
+            <CategoryItem
+              category={activeCategory}
+              level={0}
+              isDark={isDark}
+              onEdit={() => {}}
+              onDelete={() => {}}
+              draggable
+            />
+          ) : null}
+        </DragOverlay>
+      </div>
+    </DndContext>
   );
 }
