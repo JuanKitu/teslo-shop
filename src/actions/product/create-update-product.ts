@@ -16,10 +16,35 @@ const productSchema = z.object({
   title: z.string().min(3).max(255),
   slug: z.string().min(3).max(255),
   description: z.string(),
+
+  // Pricing
   price: z.coerce
     .number()
     .min(0)
     .transform((val) => Number(val.toFixed(2))),
+  salePrice: z.coerce.number().min(0).optional().nullable(),
+  costPerItem: z.coerce.number().min(0).optional().nullable(),
+
+  // Inventory
+  trackQuantity: z.boolean().optional().default(true),
+
+  // Shipping
+  weight: z.coerce.number().min(0).optional().nullable(),
+  weightUnit: z.string().optional().default('kg'),
+  length: z.coerce.number().min(0).optional().nullable(),
+  width: z.coerce.number().min(0).optional().nullable(),
+  height: z.coerce.number().min(0).optional().nullable(),
+  dimUnit: z.string().optional().default('cm'),
+
+  // Google Shopping / Instagram
+  mpn: z.string().optional(),
+  ageGroup: z.string().optional(),
+  gender: z.string().optional(),
+
+  // SEO
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  metaKeywords: z.string().optional(),
 
   categoryIds: z.array(z.uuid()).min(1, 'Debe seleccionar al menos una categoría'),
 
@@ -43,8 +68,10 @@ const productSchema = z.object({
 
         // Common fields
         price: z.coerce.number().min(0).optional().nullable(),
+        salePrice: z.coerce.number().min(0).optional().nullable(), // NEW
         inStock: z.coerce.number().min(0),
         sku: z.string().optional().nullable(),
+        barcode: z.string().optional().nullable(), // NEW
         images: z.array(z.string()).optional(),
       })
     )
@@ -112,6 +139,26 @@ export async function createUpdateProduct(formData: FormData) {
               slug: productData.slug,
               description: productData.description,
               price: productData.price,
+              salePrice: productData.salePrice,
+              costPerItem: productData.costPerItem,
+              trackQuantity: productData.trackQuantity,
+              weight: productData.weight,
+              weightUnit: productData.weightUnit,
+              length: productData.length,
+              width: productData.width,
+              height: productData.height,
+              dimUnit: productData.dimUnit,
+              mpn: productData.mpn,
+              ageGroup: productData.ageGroup,
+              gender: productData.gender,
+              metaTitle: productData.metaTitle,
+              metaDescription: productData.metaDescription,
+              metaKeywords: productData.metaKeywords
+                ? productData.metaKeywords
+                    .split(',')
+                    .map((k) => k.trim())
+                    .filter(Boolean)
+                : undefined,
               tags: { set: tagsArray },
             },
           });
@@ -133,6 +180,26 @@ export async function createUpdateProduct(formData: FormData) {
               slug: productData.slug,
               description: productData.description,
               price: productData.price,
+              salePrice: productData.salePrice,
+              costPerItem: productData.costPerItem,
+              trackQuantity: productData.trackQuantity,
+              weight: productData.weight,
+              weightUnit: productData.weightUnit,
+              length: productData.length,
+              width: productData.width,
+              height: productData.height,
+              dimUnit: productData.dimUnit,
+              mpn: productData.mpn,
+              ageGroup: productData.ageGroup,
+              gender: productData.gender,
+              metaTitle: productData.metaTitle,
+              metaDescription: productData.metaDescription,
+              metaKeywords: productData.metaKeywords
+                ? productData.metaKeywords
+                    .split(',')
+                    .map((k) => k.trim())
+                    .filter(Boolean)
+                : undefined,
               tags: { set: tagsArray },
             },
           });

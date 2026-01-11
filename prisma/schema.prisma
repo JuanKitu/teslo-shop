@@ -322,6 +322,26 @@ model Product {
 
   price Float @default(0) // precio base
 
+  // 💰 Precios adicionales
+  salePrice   Float? // precio de oferta/rebaja
+  costPerItem Float? // costo para calcular margen
+
+  // 📦 Inventario
+  trackQuantity Boolean @default(true) // gestionar stock o no
+
+  // 📏 Envíos y dimensiones
+  weight     Float?  // peso para envío
+  weightUnit String  @default("kg") // kg, lb, oz, g
+  length     Float?  // largo en cm
+  width      Float?  // ancho en cm
+  height     Float?  // alto en cm
+  dimUnit    String  @default("cm") // cm, in
+
+  // 🛍️ Google Shopping / Instagram
+  mpn      String? // Manufacturer Part Number
+  ageGroup String? // adult, kids, toddler, infant
+  gender   String? // unisex, male, female
+
   // 🏷️ Tags para búsqueda
   tags String[] @default([])
 
@@ -357,6 +377,10 @@ model Product {
   // 🔗 Imágenes generales
   images ProductImage[]
 
+  // 🔗 Productos relacionados
+  upsells     ProductRelation[] @relation("ProductUpsells")
+  crossSells  ProductRelation[] @relation("ProductCrossSells")
+
   // 🔗 Relaciones existentes
   OrderItem OrderItem[]
   Favorite  Favorite[]
@@ -378,7 +402,8 @@ model ProductVariant {
   productId String
 
   // 💰 Precio específico (null = usar precio base del producto)
-  price Float?
+  price     Float?
+  salePrice Float? // precio de oferta específico de la variante
 
   // 📦 Stock
   inStock Int @default(0)
@@ -481,13 +506,17 @@ model ProductBrand {
 }
 
 // ===================================
-// IMÁGENES DE PRODUCTO/VARIANTE
+// IMÁGENES Y VIDEOS DE PRODUCTO/VARIANTE
 // ===================================
 model ProductImage {
-  id    Int     @id @default(autoincrement())
-  url   String
+  id    Int       @id @default(autoincrement())
+  type  MediaType @default(IMAGE)
+  url   String // URL de imagen o thumbnail de video
   alt   String?
-  order Int     @default(0)
+  order Int       @default(0)
+
+  // 📹 Para videos de YouTube
+  videoUrl String? // URL completa del video de YouTube
 
   productId String?
   variantId String?
@@ -498,6 +527,7 @@ model ProductImage {
   @@index([productId])
   @@index([variantId])
   @@index([order])
+  @@index([type])
   @@map("product_images")
 }
 
@@ -715,4 +745,25 @@ model OrderAddress {
 
   @@index([orderId])
   @@map("order_addresses")
+}
+
+// ===================================
+// PRODUCTOS RELACIONADOS
+// ===================================
+model ProductRelation {
+  id               String @id @default(uuid())
+  productId        String
+  relatedProductId String
+  type             String // "upsell" o "cross-sell"
+  order            Int    @default(0)
+
+  product        Product @relation("ProductUpsells", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct Product @relation("ProductCrossSells", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, relatedProductId, type])
+  @@index([productId, type])
+  @@index([relatedProductId])
+  @@map("product_relations")
 }

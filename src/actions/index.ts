@@ -40,9 +40,12 @@ export * from './product/delete-product-image';
 export * from './product/get-all-products-admin';
 export * from './product/get-product-by-slug';
 export * from './product/get-product-by-slug-admin';
+export * from './product/get-related-products';
 export * from './product/get-stock-by-slug';
 export * from './product/load-more-products';
 export * from './product/product-pagination';
+export * from './product/search-products'; // searchProductsForRelations
+export * from './product/update-product-relations';
 export * from './product/upload-image';
 export * from './variant-options/get-all-variant-options';
 export * from './variant-options/get-variant-options-with-values';

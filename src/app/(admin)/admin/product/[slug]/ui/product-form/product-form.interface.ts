@@ -18,8 +18,10 @@ export interface VariantInput {
 
   // Common fields
   price: number;
+  salePrice?: number; // NEW: variant-specific sale price
   inStock: number;
   sku?: string;
+  barcode?: string; // NEW
   images?: string[];
 }
 
@@ -28,11 +30,49 @@ export interface FormInputs {
   slug: string;
   description: string;
   tags: string;
+
+  // Pricing
   price: number;
+  salePrice?: number | null;
+  costPerItem?: number | null;
+
+  // Inventory
+  trackQuantity?: boolean;
+  sku?: string;
+  barcode?: string;
+  quantity?: number;
+
+  // Shipping
+  weight?: number | null;
+  weightUnit?: string;
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  dimUnit?: string;
+
+  // Google Shopping / Instagram
+  mpn?: string;
+  ageGroup?: string;
+  gender?: string;
+
+  // SEO
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+
+  // Organization
   categoryIds: string[];
   brandId?: string;
+
+  // Media
   images?: (File | string)[];
+
+  // Variants
   variants: VariantInput[];
+
+  // Related Products (handled separately)
+  upsellIds?: string[];
+  crossSellIds?: string[];
 }
 
 // 🆕 Tipo que extiende Product y agrega campos opcionales de admin

@@ -17,7 +17,14 @@ const eslintConfig = [
   ...compat.extends('plugin:prettier/recommended'),
 
   {
-    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'],
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'build/**',
+      'next-env.d.ts',
+      'template franco/**',
+    ],
   },
 ];
 
